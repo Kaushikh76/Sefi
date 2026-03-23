@@ -1,0 +1,88 @@
+cubes:
+  - name: vault_actions_decoded
+    sql_table: main.vault_actions_decoded
+    data_source: default
+
+    joins: []
+
+    dimensions:
+      - name: action_id
+        sql: action_id
+        type: string
+        primary_key: true
+
+      - name: vault_address
+        sql: lower(vault_address)
+        type: string
+
+      - name: strategy_address
+        sql: lower(strategy_address)
+        type: string
+
+      - name: pool_address
+        sql: lower(pool_address)
+        type: string
+
+      - name: tx_hash
+        sql: tx_hash
+        type: string
+
+      - name: actor_address
+        sql: lower(actor_address)
+        type: string
+
+      - name: action_type
+        sql: action_type
+        type: string
+
+      - name: position_id
+        sql: position_id
+        type: string
+
+      - name: tick_lower
+        sql: tick_lower
+        type: number
+
+      - name: tick_upper
+        sql: tick_upper
+        type: number
+
+      - name: amount0
+        sql: CAST(amount0 AS REAL)
+        type: number
+
+      - name: amount1
+        sql: CAST(amount1 AS REAL)
+        type: number
+
+      - name: shares
+        sql: CAST(shares AS REAL)
+        type: number
+
+      - name: value_usd
+        sql: CAST(value_usd AS REAL)
+        type: number
+
+      - name: block_number
+        sql: block_number
+        type: number
+
+      - name: action_at
+        sql: action_at
+        type: time
+
+      - name: indexed_at
+        sql: indexed_at
+        type: time
+
+    measures:
+      - name: count
+        type: count
+
+      - name: unique_tx_count
+        sql: tx_hash
+        type: count_distinct
+
+      - name: total_value_usd
+        sql: CAST(value_usd AS REAL)
+        type: sum

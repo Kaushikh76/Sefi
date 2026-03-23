@@ -1,0 +1,129 @@
+cubes:
+  - name: clmm_agent_state
+    sql_table: main.clmm_agent_state
+    data_source: default
+
+    joins: []
+
+    dimensions:
+      - name: state_id
+        sql: state_id
+        type: string
+        primary_key: true
+
+      - name: vault_address
+        sql: lower(vault_address)
+        type: string
+
+      - name: vault_name
+        sql: vault_name
+        type: string
+
+      - name: strategy_address
+        sql: lower(strategy_address)
+        type: string
+
+      - name: pool_address
+        sql: lower(pool_address)
+        type: string
+
+      - name: asset_pair
+        sql: asset_pair
+        type: string
+
+      - name: current_tick
+        sql: current_tick
+        type: number
+
+      - name: active_lower_tick
+        sql: active_lower_tick
+        type: number
+
+      - name: active_upper_tick
+        sql: active_upper_tick
+        type: number
+
+      - name: in_range
+        sql: CASE WHEN current_tick BETWEEN active_lower_tick AND active_upper_tick THEN 'true' ELSE 'false' END
+        type: boolean
+
+      - name: distance_to_lower
+        sql: ABS(current_tick - active_lower_tick)
+        type: number
+
+      - name: distance_to_upper
+        sql: ABS(active_upper_tick - current_tick)
+        type: number
+
+      - name: nearest_boundary_distance
+        sql: >-
+          CASE
+            WHEN ABS(current_tick - active_lower_tick) < ABS(active_upper_tick - current_tick)
+            THEN ABS(current_tick - active_lower_tick)
+            ELSE ABS(active_upper_tick - current_tick)
+          END
+        type: number
+
+      - name: idle_ratio
+        sql: CAST(idle_ratio AS REAL)
+        type: number
+
+      - name: deployed_ratio
+        sql: CAST(deployed_ratio AS REAL)
+        type: number
+
+      - name: tvl_usd
+        sql: CAST(tvl_usd AS REAL)
+        type: number
+
+      - name: realized_vol_1h
+        sql: CAST(realized_vol_1h AS REAL)
+        type: number
+
+      - name: realized_vol_6h
+        sql: CAST(realized_vol_6h AS REAL)
+        type: number
+
+      - name: realized_vol_24h
+        sql: CAST(realized_vol_24h AS REAL)
+        type: number
+
+      - name: risk_regime
+        sql: risk_regime
+        type: string
+
+      - name: suggested_action
+        sql: suggested_action
+        type: string
+
+      - name: confidence_score
+        sql: CAST(confidence_score AS REAL)
+        type: number
+
+      - name: reason_summary
+        sql: reason_summary
+        type: string
+
+      - name: last_rebalance_at
+        sql: last_rebalance_at
+        type: time
+
+      - name: state_at
+        sql: state_at
+        type: time
+
+      - name: indexed_at
+        sql: indexed_at
+        type: time
+
+    measures:
+      - name: count
+        type: count
+
+      - name: avg_confidence_score
+        sql: CAST(confidence_score AS REAL)
+        type: avg
+
+      - name: total_tvl_usd
+        sql: CAST(tvl_usd AS REAL)
+        type: sum

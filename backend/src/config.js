@@ -127,6 +127,12 @@ export function createConfig(env = process.env) {
     rateLimitCooldownMs: parsePositiveInt(env.SEFI_RATE_LIMIT_COOLDOWN_MS, 60000, 1000, 300000),
     saveIntervalMs: parsePositiveInt(env.SEFI_SAVE_INTERVAL_MS, 30000, 1000, 3600000),
     saveDebounceMs: parsePositiveInt(env.SEFI_SAVE_DEBOUNCE_MS, 5000, 250, 60000),
+    derivedEnabled: parseBoolean(env.SEFI_DERIVED_ENABLED, true),
+    derivedBatchSize: parsePositiveInt(env.SEFI_DERIVED_BATCH_SIZE, 2000, 100, 50000),
+    derivedReconcileCron: env.SEFI_DERIVED_RECONCILE_CRON || '0 2 * * *',
+    bonzoApiBaseUrl: env.SEFI_BONZO_API_BASE_URL || 'https://data.bonzo.finance/',
+    externalSourceTimeoutMs: parsePositiveInt(env.SEFI_EXTERNAL_SOURCE_TIMEOUT_MS, 8000, 500, 120000),
+    externalSourceMaxRetries: parsePositiveInt(env.SEFI_EXTERNAL_SOURCE_MAX_RETRIES, 3, 0, 10),
     manifestsDir: env.SEFI_MANIFESTS_DIR || join(sefiRoot, 'contracts', 'manifests'),
     dbPath: env.SEFI_DB_PATH || join(sefiRoot, 'data', 'sefi.db'),
     cubeDbPath: env.SEFI_CUBE_DB_PATH || join(sefiRoot, 'data', 'sefi.cube.db'),
@@ -151,6 +157,9 @@ export function createConfig(env = process.env) {
     dbMetricsCacheTtlMs: parsePositiveInt(env.SEFI_DB_METRICS_CACHE_TTL_MS, 4000, 250, 600000),
     dbReadProbeMaxAgeMs: parsePositiveInt(env.SEFI_DB_READ_PROBE_MAX_AGE_MS, 15000, 1000, 600000),
     apiToken: env.SEFI_API_TOKEN || '',
+    requireAuth: parseBoolean(env.SEFI_REQUIRE_AUTH, false),
+    demoMode: parseBoolean(env.SEFI_DEMO_MODE, false),
+    demoAccessKey: env.SEFI_DEMO_ACCESS_KEY || '',
     allowedOrigins: parseCsvList(
       env.SEFI_ALLOWED_ORIGINS,
       env.SEFI_API_TOKEN ? ['http://localhost:3000', 'http://127.0.0.1:3000'] : ['*']
@@ -169,6 +178,10 @@ export function createConfig(env = process.env) {
     elizaBaseUrl: env.SEFI_ELIZA_BASE_URL || 'http://127.0.0.1:3001',
     elizaApiKey: env.SEFI_ELIZA_API_KEY || '',
   };
+
+  if (config.requireAuth && !config.apiToken && !config.demoAccessKey) {
+    throw new Error('SEFI_REQUIRE_AUTH=true requires SEFI_API_TOKEN or SEFI_DEMO_ACCESS_KEY');
+  }
 
   return config;
 }

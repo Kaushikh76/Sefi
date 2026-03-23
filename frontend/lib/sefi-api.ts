@@ -209,6 +209,24 @@ export type HealthResponse = {
   cube_health?: CubeHealthResponse;
 };
 
+export type AuthStateResponse = {
+  demo_mode: boolean;
+  auth_enabled: boolean;
+  require_auth: boolean;
+  full_access: boolean;
+  access_level: 'demo' | 'full';
+  can_login: boolean;
+  allowed_demo_features: string[];
+  contact_email: string;
+  session: {
+    id: string;
+    access_level: 'demo' | 'full';
+    auth_mode: string | null;
+    created_at: string | null;
+    expires_at: string | null;
+  } | null;
+};
+
 export type RecordType = 'contract_logs' | 'hts_transfers' | 'topic_messages' | 'erc20_transfers';
 
 export type CubeMetaResponse = {
@@ -441,6 +459,150 @@ export type ApiEndpointRunResponse = {
   attempts: number;
   normalized_sql: CubeSqlNormalized | null;
   payload: Record<string, unknown>;
+};
+
+export type DerivedAuthMode = 'none' | 'api_key' | 'bearer';
+
+export type DerivedExternalSource = {
+  id: string;
+  name: string;
+  slug: string;
+  description: string;
+  enabled: boolean;
+  is_system: boolean;
+  preset_key: string | null;
+  base_url: string;
+  auth_mode: DerivedAuthMode;
+  auth_config: Record<string, unknown>;
+  request: Record<string, unknown>;
+  normalization: Record<string, unknown>;
+  last_success_at: string | null;
+  last_error: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+};
+
+export type DerivedExternalSourceRun = {
+  id: string;
+  source_id: string;
+  status: string;
+  trigger_source: string | null;
+  http_status: number | null;
+  records_fetched: number;
+  error: string | null;
+  metadata: Record<string, unknown>;
+  started_at: string | null;
+  finished_at: string | null;
+  created_at: string | null;
+};
+
+export type DerivedPipeline = {
+  id: string;
+  name: string;
+  slug: string;
+  description: string;
+  enabled: boolean;
+  realtime_enabled: boolean;
+  is_system: boolean;
+  preset_key: string | null;
+  target_table: string;
+  schedule: Record<string, unknown>;
+  spec: Record<string, unknown>;
+  last_run_at: string | null;
+  last_run_status: string | null;
+  last_error: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+  cursor: string | null;
+};
+
+export type DerivedPipelineRun = {
+  id: string;
+  pipeline_id: string;
+  status: string;
+  trigger_source: string;
+  rows_read: number;
+  rows_written: number;
+  cursor_before: string | null;
+  cursor_after: string | null;
+  details: Record<string, unknown>;
+  error: string | null;
+  started_at: string | null;
+  finished_at: string | null;
+  created_at: string | null;
+};
+
+export type DerivedListSourcesResponse = {
+  count: number;
+  records: DerivedExternalSource[];
+};
+
+export type DerivedListSourceRunsResponse = {
+  count: number;
+  records: DerivedExternalSourceRun[];
+};
+
+export type DerivedListPipelinesResponse = {
+  count: number;
+  records: DerivedPipeline[];
+};
+
+export type DerivedListPipelineRunsResponse = {
+  count: number;
+  records: DerivedPipelineRun[];
+};
+
+export type DerivedStatusResponse = {
+  enabled: boolean;
+  initialized_at: string | null;
+  last_realtime_run_at: string | null;
+  last_reconcile_at: string | null;
+  last_error: string | null;
+  pipelines_total: number;
+  pipelines_enabled: number;
+  sources_total: number;
+  sources_enabled: number;
+  runs_total: number;
+  failed_runs: number;
+  last_pipeline_run_at: string | null;
+  max_lag_ms: number | null;
+  batch_size: number;
+  reconcile_cron: string;
+};
+
+export type DerivedSourceTestResponse = {
+  run: DerivedExternalSourceRun | null;
+  source: DerivedExternalSource | null;
+  sample_records: Array<Record<string, unknown>>;
+  records_fetched: number;
+};
+
+export type DerivedPipelineExecuteResponse = {
+  run: DerivedPipelineRun | null;
+  pipeline: DerivedPipeline | null;
+  preview_rows: Array<Record<string, unknown>>;
+};
+
+export type DerivedPipelineRunAllItem = {
+  pipeline_id: string;
+  pipeline_slug: string;
+  status: string;
+  run_id: string | null;
+  rows_read: number;
+  rows_written: number;
+  error: string | null;
+};
+
+export type DerivedPipelineRunAllResponse = {
+  trigger_source: string;
+  reconcile: boolean;
+  limit: number;
+  started_at: string;
+  finished_at: string;
+  total: number;
+  success_count: number;
+  failed_count: number;
+  results: DerivedPipelineRunAllItem[];
 };
 
 export type AgentRequestOptions = {
@@ -817,6 +979,28 @@ export async function getHealth() {
   return fetchJson<HealthResponse>('/health');
 }
 
+export async function getAuthState() {
+  return fetchJson<AuthStateResponse>('/auth/state');
+}
+
+export async function loginForFullAccess(secret: string) {
+  const normalizedSecret = String(secret || '').trim();
+  return fetchJson<{ success: boolean; auth_mode: string; access_level: 'demo' | 'full'; expires_at: string }>(
+    '/auth/session',
+    {
+      method: 'POST',
+      body: JSON.stringify({ access_key: normalizedSecret, token: normalizedSecret }),
+    }
+  );
+}
+
+export async function logoutAuthSession() {
+  return fetchJson<{ success: boolean }>('/auth/logout', {
+    method: 'POST',
+    body: JSON.stringify({}),
+  });
+}
+
 export async function getCubeHealth() {
   return fetchJson<CubeHealthResponse>('/cube/health');
 }
@@ -990,6 +1174,160 @@ export async function runApiEndpointBySlug(
     method: 'POST',
     body: JSON.stringify(input),
   });
+}
+
+export async function listDerivedSources() {
+  return fetchJson<DerivedListSourcesResponse>('/derived/sources');
+}
+
+export async function listDerivedSourceRuns(sourceId: string, limit = 50) {
+  return fetchJson<DerivedListSourceRunsResponse>(`/derived/sources/${encodeURIComponent(sourceId)}/runs?limit=${limit}`);
+}
+
+export async function createDerivedSource(input: {
+  name: string;
+  slug?: string;
+  description?: string;
+  enabled?: boolean;
+  base_url: string;
+  auth_mode?: DerivedAuthMode;
+  auth_config?: Record<string, unknown>;
+  request?: Record<string, unknown>;
+  normalization?: Record<string, unknown>;
+}) {
+  return fetchJson<DerivedExternalSource>('/derived/sources', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  });
+}
+
+export async function updateDerivedSource(sourceId: string, patch: Partial<{
+  name: string;
+  slug: string;
+  description: string;
+  enabled: boolean;
+  base_url: string;
+  auth_mode: DerivedAuthMode;
+  auth_config: Record<string, unknown>;
+  request: Record<string, unknown>;
+  normalization: Record<string, unknown>;
+}>) {
+  return fetchJson<DerivedExternalSource>(`/derived/sources/${encodeURIComponent(sourceId)}`, {
+    method: 'PATCH',
+    body: JSON.stringify(patch),
+  });
+}
+
+export async function deleteDerivedSource(sourceId: string) {
+  return fetchJson<{ deleted: boolean; id: string }>(`/derived/sources/${encodeURIComponent(sourceId)}`, {
+    method: 'DELETE',
+    body: JSON.stringify({}),
+  });
+}
+
+export async function testDerivedSource(sourceId: string, input: { persist?: boolean; max_records?: number } = {}) {
+  return fetchJson<DerivedSourceTestResponse>(`/derived/sources/${encodeURIComponent(sourceId)}/test`, {
+    method: 'POST',
+    body: JSON.stringify(input),
+  });
+}
+
+export async function listDerivedPipelines() {
+  return fetchJson<DerivedListPipelinesResponse>('/derived/pipelines');
+}
+
+export async function listDerivedPipelineRuns(pipelineId: string, limit = 100) {
+  return fetchJson<DerivedListPipelineRunsResponse>(`/derived/pipelines/${encodeURIComponent(pipelineId)}/runs?limit=${limit}`);
+}
+
+export async function listDerivedRuns(limit = 100) {
+  return fetchJson<DerivedListPipelineRunsResponse>(`/derived/runs?limit=${limit}`);
+}
+
+export async function createDerivedPipeline(input: {
+  name: string;
+  slug?: string;
+  description?: string;
+  enabled?: boolean;
+  realtime_enabled?: boolean;
+  target_table: string;
+  schedule?: Record<string, unknown>;
+  spec: Record<string, unknown>;
+}) {
+  return fetchJson<DerivedPipeline>('/derived/pipelines', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  });
+}
+
+export async function cloneDerivedPipeline(
+  pipelineId: string,
+  input: Partial<{
+    name: string;
+    slug: string;
+    description: string;
+    enabled: boolean;
+    realtime_enabled: boolean;
+    target_table: string;
+  }> = {}
+) {
+  return fetchJson<DerivedPipeline>(`/derived/pipelines/${encodeURIComponent(pipelineId)}/clone`, {
+    method: 'POST',
+    body: JSON.stringify(input),
+  });
+}
+
+export async function updateDerivedPipeline(pipelineId: string, patch: Partial<{
+  name: string;
+  slug: string;
+  description: string;
+  enabled: boolean;
+  realtime_enabled: boolean;
+  target_table: string;
+  schedule: Record<string, unknown>;
+  spec: Record<string, unknown>;
+}>) {
+  return fetchJson<DerivedPipeline>(`/derived/pipelines/${encodeURIComponent(pipelineId)}`, {
+    method: 'PATCH',
+    body: JSON.stringify(patch),
+  });
+}
+
+export async function deleteDerivedPipeline(pipelineId: string) {
+  return fetchJson<{ deleted: boolean; id: string }>(`/derived/pipelines/${encodeURIComponent(pipelineId)}`, {
+    method: 'DELETE',
+    body: JSON.stringify({}),
+  });
+}
+
+export async function runDerivedPipeline(
+  pipelineId: string,
+  input: { limit?: number; reconcile?: boolean; trigger_source?: string } = {}
+) {
+  return fetchJson<DerivedPipelineExecuteResponse>(`/derived/pipelines/${encodeURIComponent(pipelineId)}/run`, {
+    method: 'POST',
+    body: JSON.stringify(input),
+  });
+}
+
+export async function runAllDerivedPipelines(
+  input: { limit?: number; reconcile?: boolean; trigger_source?: string; include_disabled?: boolean } = {}
+) {
+  return fetchJson<DerivedPipelineRunAllResponse>('/derived/pipelines/run-all', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  });
+}
+
+export async function previewDerivedPipeline(pipelineId: string, input: { limit?: number } = {}) {
+  return fetchJson<DerivedPipelineExecuteResponse>(`/derived/pipelines/${encodeURIComponent(pipelineId)}/preview`, {
+    method: 'POST',
+    body: JSON.stringify(input),
+  });
+}
+
+export async function getDerivedStatus() {
+  return fetchJson<DerivedStatusResponse>('/derived/status');
 }
 
 export async function getAgentPlaygroundContext() {

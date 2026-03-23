@@ -37,3 +37,4 @@ NEXT_PUBLIC_SEFI_API_TOKEN=
 - Query Lab supports Cube semantic queries and SQL execution against SQLite
 - Agents workspace includes persisted Hedera/ElizaOS agent management, runtime controls, and publish test tooling
 - Legacy semantic-first NL-to-query playground remains available under `/agents/playground`
+- Demo mode startup panel supports read/query/chat access with full-access login via env-backed key

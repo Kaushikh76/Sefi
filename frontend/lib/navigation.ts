@@ -1,4 +1,4 @@
-import { Bot, Boxes, Database, Layers, LayoutDashboard, PlayCircle, Waypoints } from 'lucide-react';
+import { Bot, Boxes, Database, Layers, LayoutDashboard, PlayCircle, TableProperties, Waypoints } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
 export type AppNavPlacement = 'primary' | 'workspace';
@@ -59,6 +59,14 @@ export const APP_NAV_ITEMS: AppNavItem[] = [
     navLabel: 'API',
     icon: Waypoints,
     description: 'Create reusable API endpoints for custom Cube queries.',
+    placement: 'primary',
+  },
+  {
+    href: '/derived/pipelines',
+    label: 'Derived Tables',
+    navLabel: 'Derived',
+    icon: TableProperties,
+    description: 'Create derived subtables, enrichment joins, and runtime jobs.',
     placement: 'primary',
   },
   {

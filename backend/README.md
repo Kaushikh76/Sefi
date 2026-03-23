@@ -50,6 +50,9 @@ All model files (curated + generated) are persisted on disk under:
 ## API Endpoints
 
 - `GET /api/v1/health`
+- `GET /api/v1/auth/state`
+- `POST /api/v1/auth/session`
+- `POST /api/v1/auth/logout`
 - `GET /api/v1/status`
 - `GET /api/v1/realtime/stream?channels=index,api,activity`
 - `GET /api/v1/metrics/overview`
@@ -103,6 +106,8 @@ All model files (curated + generated) are persisted on disk under:
 ## Security and Agent Env
 
 - `SEFI_API_TOKEN` (optional): enables token-gated `/api/v1/*` routes except `/health`
+- `SEFI_DEMO_MODE` (optional): enables demo mode write restrictions
+- `SEFI_DEMO_ACCESS_KEY` (optional): full-access key used by `POST /api/v1/auth/session` in demo mode
 - `SEFI_ALLOWED_ORIGINS`: CSV allowlist for CORS
 - `SEFI_CUBE_HEALTH_TIMEOUT_MS`: timeout for cube readiness probe
 - `SEFI_CUBE_HEALTH_CACHE_TTL_MS`: cache TTL for cube readiness probe
@@ -123,6 +128,7 @@ All model files (curated + generated) are persisted on disk under:
 - Realtime transport is SSE-only via `GET /api/v1/realtime/stream`.
 - Studio AI generation is draft-first. Drafts are not saved to disk until `POST /api/v1/modeling/ai/approve`.
 - API Builder endpoints (`/api/v1/apis*`, `/api/v1/endpoints/:slug`) execute typed, templated Cube queries only (no raw passthrough).
+- Demo mode allows read/browse + query/chat writes only (`/cube/query`, `/modeling/sqlite/query`, `/agents/playground/*`) unless full access is granted.
 
 ## Run Tests
 

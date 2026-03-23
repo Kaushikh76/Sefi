@@ -1,0 +1,84 @@
+cubes:
+  - name: price_volatility_snapshots
+    sql_table: main.price_volatility_snapshots
+    data_source: default
+
+    joins: []
+
+    dimensions:
+      - name: snapshot_id
+        sql: snapshot_id
+        type: string
+        primary_key: true
+
+      - name: market_key
+        sql: market_key
+        type: string
+
+      - name: base_symbol
+        sql: base_symbol
+        type: string
+
+      - name: quote_symbol
+        sql: quote_symbol
+        type: string
+
+      - name: source
+        sql: source
+        type: string
+
+      - name: interval_label
+        sql: interval_label
+        type: string
+
+      - name: price
+        sql: CAST(price AS REAL)
+        type: number
+
+      - name: return_1h
+        sql: CAST(return_1h AS REAL)
+        type: number
+
+      - name: return_6h
+        sql: CAST(return_6h AS REAL)
+        type: number
+
+      - name: return_24h
+        sql: CAST(return_24h AS REAL)
+        type: number
+
+      - name: realized_vol_1h
+        sql: CAST(realized_vol_1h AS REAL)
+        type: number
+
+      - name: realized_vol_6h
+        sql: CAST(realized_vol_6h AS REAL)
+        type: number
+
+      - name: realized_vol_24h
+        sql: CAST(realized_vol_24h AS REAL)
+        type: number
+
+      - name: snapshot_at
+        sql: snapshot_at
+        type: time
+
+      - name: indexed_at
+        sql: indexed_at
+        type: time
+
+    measures:
+      - name: count
+        type: count
+
+      - name: avg_price
+        sql: CAST(price AS REAL)
+        type: avg
+
+      - name: max_realized_vol_6h
+        sql: CAST(realized_vol_6h AS REAL)
+        type: max
+
+      - name: max_realized_vol_24h
+        sql: CAST(realized_vol_24h AS REAL)
+        type: max

@@ -1,0 +1,80 @@
+cubes:
+  - name: clmm_pool_snapshots
+    sql_table: main.clmm_pool_snapshots
+    data_source: default
+
+    joins: []
+
+    dimensions:
+      - name: snapshot_id
+        sql: snapshot_id
+        type: string
+        primary_key: true
+
+      - name: pool_address
+        sql: lower(pool_address)
+        type: string
+
+      - name: dex_name
+        sql: dex_name
+        type: string
+
+      - name: token0_symbol
+        sql: token0_symbol
+        type: string
+
+      - name: token1_symbol
+        sql: token1_symbol
+        type: string
+
+      - name: fee_tier_bps
+        sql: fee_tier_bps
+        type: number
+
+      - name: current_tick
+        sql: current_tick
+        type: number
+
+      - name: sqrt_price_x96
+        sql: sqrt_price_x96
+        type: string
+
+      - name: spot_price
+        sql: CAST(spot_price AS REAL)
+        type: number
+
+      - name: active_liquidity
+        sql: CAST(active_liquidity AS REAL)
+        type: number
+
+      - name: tvl_usd
+        sql: CAST(tvl_usd AS REAL)
+        type: number
+
+      - name: block_number
+        sql: block_number
+        type: number
+
+      - name: snapshot_at
+        sql: snapshot_at
+        type: time
+
+      - name: indexed_at
+        sql: indexed_at
+        type: time
+
+    measures:
+      - name: count
+        type: count
+
+      - name: latest_block_number
+        sql: block_number
+        type: max
+
+      - name: avg_spot_price
+        sql: CAST(spot_price AS REAL)
+        type: avg
+
+      - name: max_tvl_usd
+        sql: CAST(tvl_usd AS REAL)
+        type: max

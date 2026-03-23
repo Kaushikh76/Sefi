@@ -744,6 +744,272 @@ const MIGRATIONS = [
       `);
     },
   },
+  {
+    version: 9,
+    name: 'add_derived_tables_workspace_and_clmm_vault_backing_tables',
+    up(db) {
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS external_sources (
+          id TEXT PRIMARY KEY,
+          name TEXT NOT NULL,
+          slug TEXT NOT NULL UNIQUE,
+          description TEXT,
+          enabled INTEGER NOT NULL DEFAULT 1,
+          is_system INTEGER NOT NULL DEFAULT 0,
+          preset_key TEXT,
+          base_url TEXT NOT NULL,
+          auth_mode TEXT NOT NULL DEFAULT 'none',
+          auth_config_json TEXT NOT NULL DEFAULT '{}',
+          request_json TEXT NOT NULL DEFAULT '{}',
+          normalization_json TEXT NOT NULL DEFAULT '{}',
+          last_success_at TEXT,
+          last_error TEXT,
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+        );
+
+        CREATE TABLE IF NOT EXISTS external_source_runs (
+          id TEXT PRIMARY KEY,
+          source_id TEXT NOT NULL,
+          status TEXT NOT NULL,
+          trigger_source TEXT NOT NULL DEFAULT 'manual',
+          http_status INTEGER,
+          records_fetched INTEGER NOT NULL DEFAULT 0,
+          error TEXT,
+          metadata_json TEXT NOT NULL DEFAULT '{}',
+          started_at TEXT NOT NULL,
+          finished_at TEXT,
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          FOREIGN KEY(source_id) REFERENCES external_sources(id) ON DELETE CASCADE
+        );
+
+        CREATE TABLE IF NOT EXISTS external_source_records (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          source_id TEXT NOT NULL,
+          run_id TEXT,
+          record_key TEXT NOT NULL,
+          payload_json TEXT,
+          normalized_json TEXT,
+          observed_at TEXT NOT NULL DEFAULT (datetime('now')),
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          UNIQUE(source_id, record_key),
+          FOREIGN KEY(source_id) REFERENCES external_sources(id) ON DELETE CASCADE,
+          FOREIGN KEY(run_id) REFERENCES external_source_runs(id) ON DELETE SET NULL
+        );
+
+        CREATE TABLE IF NOT EXISTS derived_pipelines (
+          id TEXT PRIMARY KEY,
+          name TEXT NOT NULL,
+          slug TEXT NOT NULL UNIQUE,
+          description TEXT,
+          enabled INTEGER NOT NULL DEFAULT 1,
+          realtime_enabled INTEGER NOT NULL DEFAULT 1,
+          is_system INTEGER NOT NULL DEFAULT 0,
+          preset_key TEXT,
+          target_table TEXT NOT NULL,
+          schedule_json TEXT NOT NULL DEFAULT '{}',
+          spec_json TEXT NOT NULL DEFAULT '{}',
+          last_run_at TEXT,
+          last_run_status TEXT,
+          last_error TEXT,
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+        );
+
+        CREATE TABLE IF NOT EXISTS derived_pipeline_runs (
+          id TEXT PRIMARY KEY,
+          pipeline_id TEXT NOT NULL,
+          status TEXT NOT NULL,
+          trigger_source TEXT NOT NULL DEFAULT 'manual',
+          rows_read INTEGER NOT NULL DEFAULT 0,
+          rows_written INTEGER NOT NULL DEFAULT 0,
+          cursor_before TEXT,
+          cursor_after TEXT,
+          details_json TEXT NOT NULL DEFAULT '{}',
+          error TEXT,
+          started_at TEXT NOT NULL,
+          finished_at TEXT,
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          FOREIGN KEY(pipeline_id) REFERENCES derived_pipelines(id) ON DELETE CASCADE
+        );
+
+        CREATE TABLE IF NOT EXISTS derived_pipeline_cursors (
+          pipeline_id TEXT PRIMARY KEY,
+          cursor_value TEXT,
+          updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+          FOREIGN KEY(pipeline_id) REFERENCES derived_pipelines(id) ON DELETE CASCADE
+        );
+
+        CREATE TABLE IF NOT EXISTS clmm_pool_snapshots (
+          snapshot_id TEXT PRIMARY KEY,
+          pool_address TEXT,
+          dex_name TEXT,
+          token0_symbol TEXT,
+          token1_symbol TEXT,
+          fee_tier_bps REAL,
+          current_tick REAL,
+          sqrt_price_x96 TEXT,
+          spot_price REAL,
+          active_liquidity REAL,
+          tvl_usd REAL,
+          block_number REAL,
+          snapshot_at TEXT,
+          indexed_at TEXT
+        );
+
+        CREATE TABLE IF NOT EXISTS clmm_positions (
+          position_id TEXT PRIMARY KEY,
+          pool_address TEXT,
+          vault_address TEXT,
+          strategy_address TEXT,
+          owner_address TEXT,
+          token0_symbol TEXT,
+          token1_symbol TEXT,
+          tick_lower REAL,
+          tick_upper REAL,
+          liquidity REAL,
+          amount0 REAL,
+          amount1 REAL,
+          fees_owed0 REAL,
+          fees_owed1 REAL,
+          is_active INTEGER,
+          minted_at TEXT,
+          last_updated_at TEXT,
+          indexed_at TEXT
+        );
+
+        CREATE TABLE IF NOT EXISTS vault_strategy_state (
+          vault_address TEXT PRIMARY KEY,
+          vault_name TEXT,
+          strategy_address TEXT,
+          pool_address TEXT,
+          asset_pair TEXT,
+          current_position_id TEXT,
+          token0_symbol TEXT,
+          token1_symbol TEXT,
+          current_tick REAL,
+          active_lower_tick REAL,
+          active_upper_tick REAL,
+          in_range INTEGER,
+          distance_to_lower REAL,
+          distance_to_upper REAL,
+          idle_ratio REAL,
+          deployed_ratio REAL,
+          idle_usd REAL,
+          deployed_usd REAL,
+          tvl_usd REAL,
+          share_price REAL,
+          rebalance_count_24h REAL,
+          last_rebalance_at TEXT,
+          state_at TEXT,
+          indexed_at TEXT
+        );
+
+        CREATE TABLE IF NOT EXISTS vault_actions_decoded (
+          action_id TEXT PRIMARY KEY,
+          vault_address TEXT,
+          strategy_address TEXT,
+          pool_address TEXT,
+          tx_hash TEXT,
+          actor_address TEXT,
+          action_type TEXT,
+          position_id TEXT,
+          tick_lower REAL,
+          tick_upper REAL,
+          amount0 REAL,
+          amount1 REAL,
+          shares REAL,
+          value_usd REAL,
+          block_number REAL,
+          action_at TEXT,
+          indexed_at TEXT
+        );
+
+        CREATE TABLE IF NOT EXISTS price_volatility_snapshots (
+          snapshot_id TEXT PRIMARY KEY,
+          market_key TEXT,
+          base_symbol TEXT,
+          quote_symbol TEXT,
+          source TEXT,
+          interval_label TEXT,
+          price REAL,
+          return_1h REAL,
+          return_6h REAL,
+          return_24h REAL,
+          realized_vol_1h REAL,
+          realized_vol_6h REAL,
+          realized_vol_24h REAL,
+          snapshot_at TEXT,
+          indexed_at TEXT
+        );
+
+        CREATE TABLE IF NOT EXISTS clmm_agent_state (
+          state_id TEXT PRIMARY KEY,
+          vault_address TEXT,
+          vault_name TEXT,
+          strategy_address TEXT,
+          pool_address TEXT,
+          asset_pair TEXT,
+          current_tick REAL,
+          active_lower_tick REAL,
+          active_upper_tick REAL,
+          in_range INTEGER,
+          distance_to_lower REAL,
+          distance_to_upper REAL,
+          nearest_boundary_distance REAL,
+          idle_ratio REAL,
+          deployed_ratio REAL,
+          tvl_usd REAL,
+          realized_vol_1h REAL,
+          realized_vol_6h REAL,
+          realized_vol_24h REAL,
+          risk_regime TEXT,
+          suggested_action TEXT,
+          confidence_score REAL,
+          reason_summary TEXT,
+          last_rebalance_at TEXT,
+          state_at TEXT,
+          indexed_at TEXT
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_external_sources_slug ON external_sources(slug);
+        CREATE INDEX IF NOT EXISTS idx_external_sources_enabled ON external_sources(enabled);
+        CREATE INDEX IF NOT EXISTS idx_external_source_runs_source_id ON external_source_runs(source_id);
+        CREATE INDEX IF NOT EXISTS idx_external_source_runs_started_at ON external_source_runs(started_at);
+        CREATE INDEX IF NOT EXISTS idx_external_source_records_source_id ON external_source_records(source_id);
+        CREATE INDEX IF NOT EXISTS idx_external_source_records_observed_at ON external_source_records(observed_at);
+
+        CREATE INDEX IF NOT EXISTS idx_derived_pipelines_slug ON derived_pipelines(slug);
+        CREATE INDEX IF NOT EXISTS idx_derived_pipelines_enabled ON derived_pipelines(enabled);
+        CREATE INDEX IF NOT EXISTS idx_derived_pipeline_runs_pipeline_id ON derived_pipeline_runs(pipeline_id);
+        CREATE INDEX IF NOT EXISTS idx_derived_pipeline_runs_started_at ON derived_pipeline_runs(started_at);
+
+        CREATE INDEX IF NOT EXISTS idx_clmm_pool_snapshots_pool_snapshot ON clmm_pool_snapshots(pool_address, snapshot_at);
+        CREATE INDEX IF NOT EXISTS idx_clmm_pool_snapshots_block ON clmm_pool_snapshots(block_number);
+        CREATE INDEX IF NOT EXISTS idx_clmm_pool_snapshots_snapshot_at ON clmm_pool_snapshots(snapshot_at);
+
+        CREATE INDEX IF NOT EXISTS idx_clmm_positions_pool_updated ON clmm_positions(pool_address, last_updated_at);
+        CREATE INDEX IF NOT EXISTS idx_clmm_positions_vault_updated ON clmm_positions(vault_address, last_updated_at);
+        CREATE INDEX IF NOT EXISTS idx_clmm_positions_active ON clmm_positions(is_active);
+
+        CREATE INDEX IF NOT EXISTS idx_vault_strategy_state_pool ON vault_strategy_state(pool_address);
+        CREATE INDEX IF NOT EXISTS idx_vault_strategy_state_strategy ON vault_strategy_state(strategy_address);
+        CREATE INDEX IF NOT EXISTS idx_vault_strategy_state_state_at ON vault_strategy_state(state_at);
+
+        CREATE INDEX IF NOT EXISTS idx_vault_actions_decoded_vault_action_at ON vault_actions_decoded(vault_address, action_at);
+        CREATE INDEX IF NOT EXISTS idx_vault_actions_decoded_action_type ON vault_actions_decoded(action_type, action_at);
+        CREATE INDEX IF NOT EXISTS idx_vault_actions_decoded_tx_hash ON vault_actions_decoded(tx_hash);
+        CREATE INDEX IF NOT EXISTS idx_vault_actions_decoded_action_at ON vault_actions_decoded(action_at);
+
+        CREATE INDEX IF NOT EXISTS idx_price_volatility_snapshots_market_at ON price_volatility_snapshots(market_key, snapshot_at);
+        CREATE INDEX IF NOT EXISTS idx_price_volatility_snapshots_symbols_at ON price_volatility_snapshots(base_symbol, quote_symbol, snapshot_at);
+        CREATE INDEX IF NOT EXISTS idx_price_volatility_snapshots_snapshot_at ON price_volatility_snapshots(snapshot_at);
+
+        CREATE INDEX IF NOT EXISTS idx_clmm_agent_state_vault_state_at ON clmm_agent_state(vault_address, state_at);
+        CREATE INDEX IF NOT EXISTS idx_clmm_agent_state_action_state_at ON clmm_agent_state(suggested_action, state_at);
+      `);
+    },
+  },
 ];
 
 export class SeFiDatabase {
@@ -2619,6 +2885,16 @@ export class SeFiDatabase {
       'contracts',
       'activity_log',
       'ingest_errors',
+      'external_source_runs',
+      'external_source_records',
+      'derived_pipeline_runs',
+      'derived_pipeline_cursors',
+      'clmm_pool_snapshots',
+      'clmm_positions',
+      'vault_strategy_state',
+      'vault_actions_decoded',
+      'price_volatility_snapshots',
+      'clmm_agent_state',
     ];
 
     const resetTxn = this.db.transaction(() => {

@@ -1,0 +1,120 @@
+cubes:
+  - name: vault_strategy_state
+    sql_table: main.vault_strategy_state
+    data_source: default
+
+    joins: []
+
+    dimensions:
+      - name: vault_address
+        sql: lower(vault_address)
+        type: string
+        primary_key: true
+
+      - name: vault_name
+        sql: vault_name
+        type: string
+
+      - name: strategy_address
+        sql: lower(strategy_address)
+        type: string
+
+      - name: pool_address
+        sql: lower(pool_address)
+        type: string
+
+      - name: asset_pair
+        sql: asset_pair
+        type: string
+
+      - name: current_position_id
+        sql: current_position_id
+        type: string
+
+      - name: token0_symbol
+        sql: token0_symbol
+        type: string
+
+      - name: token1_symbol
+        sql: token1_symbol
+        type: string
+
+      - name: current_tick
+        sql: current_tick
+        type: number
+
+      - name: active_lower_tick
+        sql: active_lower_tick
+        type: number
+
+      - name: active_upper_tick
+        sql: active_upper_tick
+        type: number
+
+      - name: in_range
+        sql: CASE WHEN current_tick BETWEEN active_lower_tick AND active_upper_tick THEN 'true' ELSE 'false' END
+        type: boolean
+
+      - name: distance_to_lower
+        sql: ABS(current_tick - active_lower_tick)
+        type: number
+
+      - name: distance_to_upper
+        sql: ABS(active_upper_tick - current_tick)
+        type: number
+
+      - name: idle_ratio
+        sql: CAST(idle_ratio AS REAL)
+        type: number
+
+      - name: deployed_ratio
+        sql: CAST(deployed_ratio AS REAL)
+        type: number
+
+      - name: idle_usd
+        sql: CAST(idle_usd AS REAL)
+        type: number
+
+      - name: deployed_usd
+        sql: CAST(deployed_usd AS REAL)
+        type: number
+
+      - name: tvl_usd
+        sql: CAST(tvl_usd AS REAL)
+        type: number
+
+      - name: share_price
+        sql: CAST(share_price AS REAL)
+        type: number
+
+      - name: rebalance_count_24h
+        sql: rebalance_count_24h
+        type: number
+
+      - name: last_rebalance_at
+        sql: last_rebalance_at
+        type: time
+
+      - name: state_at
+        sql: state_at
+        type: time
+
+      - name: indexed_at
+        sql: indexed_at
+        type: time
+
+    measures:
+      - name: count
+        type: count
+
+      - name: total_tvl_usd
+        sql: CAST(tvl_usd AS REAL)
+        type: sum
+
+      - name: avg_idle_ratio
+        sql: CAST(idle_ratio AS REAL)
+        type: avg
+
+      - name: avg_deployed_ratio
+        sql: CAST(deployed_ratio AS REAL)
+        type: avg

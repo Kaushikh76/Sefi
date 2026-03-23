@@ -10,6 +10,7 @@ import {
   formatNumber,
   formatTime,
   getActivity,
+  getAuthState,
   triggerIndexerAction,
   type ActivityRecord,
   type IndexerAction,
@@ -36,6 +37,7 @@ export default function IndexRunsPage() {
   const [errors, setErrors] = useState<PageErrors>(INITIAL_ERRORS);
   const [activityStale, setActivityStale] = useState(false);
   const [activityUpdatedAt, setActivityUpdatedAt] = useState<string | null>(null);
+  const [demoRestricted, setDemoRestricted] = useState(false);
 
   const activityRef = useRef<ActivityRecord[]>([]);
 
@@ -78,6 +80,22 @@ export default function IndexRunsPage() {
     });
   }, [refresh]);
 
+  const refreshAccessState = useCallback(() => {
+    getAuthState()
+      .then((auth) => {
+        setDemoRestricted(Boolean(auth.demo_mode && !auth.full_access));
+      })
+      .catch(() => {
+        // ignore auth state fetch failures for this page
+      });
+  }, []);
+
+  useEffect(() => {
+    refreshAccessState();
+    const timer = setInterval(refreshAccessState, 10000);
+    return () => clearInterval(timer);
+  }, [refreshAccessState]);
+
   useEffect(() => {
     const timer = setInterval(() => {
       refresh(true).catch(() => {
@@ -89,6 +107,10 @@ export default function IndexRunsPage() {
 
   const triggerAction = useCallback(
     async (action: IndexerAction) => {
+      if (demoRestricted) {
+        setError('Run controls are disabled in demo mode. Login for full access.');
+        return;
+      }
       try {
         setActionLoading(action);
         setError(null);
@@ -102,7 +124,7 @@ export default function IndexRunsPage() {
         setActionLoading(null);
       }
     },
-    [refresh]
+    [demoRestricted, refresh]
   );
 
   const problemEvents = useMemo(
@@ -142,23 +164,26 @@ export default function IndexRunsPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex flex-wrap items-center gap-2">
-              <Button onClick={() => triggerAction('sync')} disabled={Boolean(actionLoading) || Boolean(status?.isRunning)}>
+              <Button onClick={() => triggerAction('sync')} disabled={demoRestricted || Boolean(actionLoading) || Boolean(status?.isRunning)}>
                 {actionLoading === 'sync' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />} Full Sync
               </Button>
-              <Button variant="secondary" onClick={() => triggerAction('sync/contracts')} disabled={Boolean(actionLoading) || Boolean(status?.isRunning)}>
+              <Button variant="secondary" onClick={() => triggerAction('sync/contracts')} disabled={demoRestricted || Boolean(actionLoading) || Boolean(status?.isRunning)}>
                 {actionLoading === 'sync/contracts' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Database className="h-4 w-4" />} Contracts
               </Button>
-              <Button variant="secondary" onClick={() => triggerAction('sync/hts')} disabled={Boolean(actionLoading) || Boolean(status?.isRunning)}>
+              <Button variant="secondary" onClick={() => triggerAction('sync/hts')} disabled={demoRestricted || Boolean(actionLoading) || Boolean(status?.isRunning)}>
                 {actionLoading === 'sync/hts' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Waves className="h-4 w-4" />} HTS
               </Button>
-              <Button variant="secondary" onClick={() => triggerAction('sync/topics')} disabled={Boolean(actionLoading) || Boolean(status?.isRunning)}>
+              <Button variant="secondary" onClick={() => triggerAction('sync/topics')} disabled={demoRestricted || Boolean(actionLoading) || Boolean(status?.isRunning)}>
                 {actionLoading === 'sync/topics' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Radio className="h-4 w-4" />} Topics
               </Button>
-              <Button variant="secondary" onClick={() => triggerAction('listen')} disabled={Boolean(actionLoading) || Boolean(status?.isRunning)}>
+              <Button variant="secondary" onClick={() => triggerAction('listen')} disabled={demoRestricted || Boolean(actionLoading) || Boolean(status?.isRunning)}>
                 {actionLoading === 'listen' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Radio className="h-4 w-4" />} Start Polling
               </Button>
-              <Button variant="destructive" onClick={() => triggerAction('stop')} disabled={Boolean(actionLoading) || !Boolean(status?.isRunning)}>
+              <Button variant="destructive" onClick={() => triggerAction('stop')} disabled={demoRestricted || Boolean(actionLoading) || !Boolean(status?.isRunning)}>
                 {actionLoading === 'stop' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Square className="h-4 w-4" />} Stop
+              </Button>
+              <Button variant="destructive" onClick={() => triggerAction('reset')} disabled={demoRestricted || Boolean(actionLoading) || Boolean(status?.isRunning)}>
+                {actionLoading === 'reset' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Database className="h-4 w-4" />} Reset Data
               </Button>
               <Button variant="ghost" onClick={() => refresh(false)} disabled={loading || Boolean(actionLoading)}>
                 <RefreshCcw className="h-4 w-4" /> Refresh
@@ -166,6 +191,7 @@ export default function IndexRunsPage() {
               {loading || refreshing ? <Badge variant="secondary">Loading...</Badge> : null}
               {notice ? <Badge variant="success">{notice}</Badge> : null}
               {error ? <Badge variant="warning">{error}</Badge> : null}
+              {demoRestricted ? <Badge variant="warning">Demo mode: run controls disabled</Badge> : null}
               {sharedStatus.stale || activityStale ? <Badge variant="outline">Using stale data</Badge> : null}
             </div>
             <p className="text-xs text-zinc-500">

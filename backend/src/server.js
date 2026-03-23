@@ -10,6 +10,7 @@ import { AgentOrchestrator } from './agent-orchestrator.js';
 import { resolveCubeAuthToken } from './cube-auth.js';
 import { executeCubeQueryWithRetry, normalizeCubeSqlPayload } from './cube-proxy.js';
 import { RealtimeHub } from './realtime.js';
+import { DerivedPipelineService } from './derived.js';
 import {
   materializeQueryTemplate,
   resolveRuntimeParams,
@@ -257,12 +258,16 @@ function mapKnownError(error) {
       'INVALID_DRAFT',
       'INVALID_RUNTIME_PARAMS',
       'INVALID_ENDPOINT_DEFINITION',
+      'INVALID_DERIVED_SOURCE',
+      'INVALID_DERIVED_PIPELINE',
       'INVALID_AGENT_TYPE',
       'INVALID_AGENT_NAME',
       'INVALID_ENV_REF',
       'INVALID_AGENT_TOPIC',
       'MISSING_ENV_REFS',
       'AUTONOMOUS_NETWORK_BLOCKED',
+      'PIPELINE_DISABLED',
+      'PIPELINE_RUNNING',
     ].includes(code)
   ) {
     error.status = 400;
@@ -322,6 +327,14 @@ async function main() {
   const realtimeHub = new RealtimeHub({
     heartbeatMs: Math.max(1000, Number(config.statusStreamHeartbeatMs) || 15000),
   });
+  const derivedService = new DerivedPipelineService({
+    config,
+    database,
+    fetchImpl: fetch,
+    onEvent: (eventType, payload) => {
+      realtimeHub.publish('api', eventType, payload || {});
+    },
+  });
   const scheduledAgentRuns = new Map();
   let agentSchedulerTimer = null;
   let agentSchedulerRunning = false;
@@ -343,6 +356,18 @@ async function main() {
   } catch (error) {
     database.logActivity('manifest_error', null, error.message);
     log('warn', 'manifest_refresh_failed', { message: error.message });
+  }
+
+  if (config.derivedEnabled) {
+    try {
+      await derivedService.init();
+      database.logActivity('derived_init', null, 'Derived tables workspace initialized');
+    } catch (error) {
+      database.logActivity('derived_init_error', null, error.message);
+      log('warn', 'derived_init_failed', {
+        message: error instanceof Error ? error.message : String(error),
+      });
+    }
   }
 
   async function runScheduledAgentTick() {
@@ -428,7 +453,7 @@ async function main() {
   app.use('/api/v1', (req, res, next) => {
     const origin = req.headers.origin ? String(req.headers.origin) : '';
     const allowAllOrigins = config.allowedOrigins.includes('*');
-    const allowCredentials = Boolean(config.apiToken);
+    const allowCredentials = Boolean(config.apiToken || config.demoMode);
 
     if (allowAllOrigins) {
       if (origin) {
@@ -460,10 +485,28 @@ async function main() {
   });
 
   const authEnabled = Boolean(config.apiToken);
+  const requireAuthEnabled = Boolean(config.requireAuth);
+  const demoModeEnabled = Boolean(config.demoMode);
+  const demoAccessKey = String(config.demoAccessKey || '').trim();
   const sessionCookieName = config.sessionCookieName || 'sefi_session';
   const sessionTtlSeconds = Math.max(300, Number(config.sessionTtlSeconds) || 43200);
   const sessionSecureCookie = Boolean(config.sessionSecureCookie || parseBooleanEnv(process.env.SEFI_SESSION_SECURE_COOKIE, false));
   const sessionStore = new Map();
+  const demoAllowedWriteFeatures = ['browse_pages', 'send_query', 'talk_with_agent'];
+  const demoWriteAllowlist = new Set([
+    '/auth/session',
+    '/auth/logout',
+    '/cube/query',
+    '/modeling/sqlite/query',
+    '/agents/playground/ask',
+    '/agents/playground/execute',
+  ]);
+
+  function hasValidApiToken(req) {
+    if (!config.apiToken) return false;
+    const token = getAccessToken(req);
+    return Boolean(token && token === config.apiToken);
+  }
 
   function cleanupExpiredSessions() {
     const now = Date.now();
@@ -474,18 +517,34 @@ async function main() {
     }
   }
 
-  function createSession() {
+  function createSession(options = {}) {
+    const accessLevel = options.accessLevel === 'full' ? 'full' : 'demo';
+    const authMode = String(options.authMode || (accessLevel === 'full' ? 'authenticated' : 'demo'));
     const now = Date.now();
     const expiresAt = now + (sessionTtlSeconds * 1000);
     const sessionId = crypto.randomUUID();
     sessionStore.set(sessionId, {
       createdAt: now,
       expiresAt,
+      accessLevel,
+      authMode,
     });
     return {
       sessionId,
       expiresAt,
+      accessLevel,
+      authMode,
     };
+  }
+
+  function issueSessionCookie(res, session) {
+    res.setHeader('Set-Cookie', serializeCookie(sessionCookieName, session.sessionId, {
+      maxAgeSeconds: sessionTtlSeconds,
+      httpOnly: true,
+      sameSite: 'Lax',
+      secure: sessionSecureCookie,
+      path: '/',
+    }));
   }
 
   function clearSession(req, res) {
@@ -523,47 +582,105 @@ async function main() {
     };
   }
 
+  function getRequestAccessLevel(req) {
+    if (hasValidApiToken(req)) return 'full';
+    if (req.session?.accessLevel === 'full') return 'full';
+    if (authEnabled || requireAuthEnabled || demoModeEnabled) return 'demo';
+    return 'full';
+  }
+
+  function hasFullAccess(req) {
+    return getRequestAccessLevel(req) === 'full';
+  }
+
+  app.get('/api/v1/auth/state', route(async (req, res) => {
+    const session = req.session || getSessionFromRequest(req) || null;
+    if (session) {
+      req.session = session;
+    }
+    const fullAccess = hasFullAccess(req);
+    res.json({
+      demo_mode: demoModeEnabled,
+      auth_enabled: authEnabled,
+      require_auth: requireAuthEnabled,
+      full_access: fullAccess,
+      access_level: fullAccess ? 'full' : 'demo',
+      can_login: Boolean(demoAccessKey || config.apiToken),
+      allowed_demo_features: demoAllowedWriteFeatures,
+      contact_email: 'connect@kaushikh.xyz',
+      session: session
+        ? {
+            id: session.id,
+            access_level: session.accessLevel === 'full' ? 'full' : 'demo',
+            auth_mode: session.authMode || null,
+            created_at: session.createdAt ? new Date(session.createdAt).toISOString() : null,
+            expires_at: session.expiresAt ? new Date(session.expiresAt).toISOString() : null,
+          }
+        : null,
+    });
+  }));
+
   app.post('/api/v1/auth/session', route(async (req, res) => {
-    if (!authEnabled) {
-      const session = createSession();
-      res.setHeader('Set-Cookie', serializeCookie(sessionCookieName, session.sessionId, {
-        maxAgeSeconds: sessionTtlSeconds,
-        httpOnly: true,
-        sameSite: 'Lax',
-        secure: sessionSecureCookie,
-        path: '/',
-      }));
+    const body = ensureRequestBodyObject(req);
+    const bodyToken = typeof body.token === 'string' ? body.token.trim() : '';
+    const headerToken = getAccessToken(req);
+    const providedToken = bodyToken || headerToken;
+    const bodyAccessKey =
+      typeof body.access_key === 'string'
+        ? body.access_key.trim()
+        : typeof body.password === 'string'
+          ? body.password.trim()
+          : '';
+
+    if (config.apiToken && providedToken && providedToken === config.apiToken) {
+      const session = createSession({ accessLevel: 'full', authMode: 'token_session' });
+      issueSessionCookie(res, session);
       res.json({
         success: true,
-        auth_mode: 'open',
+        auth_mode: 'token_session',
+        access_level: 'full',
         expires_at: new Date(session.expiresAt).toISOString(),
       });
       return;
     }
 
-    const body = ensureRequestBodyObject(req);
-    const bodyToken = typeof body.token === 'string' ? body.token.trim() : '';
-    const headerToken = getAccessToken(req);
-    const providedToken = bodyToken || headerToken;
-    if (!providedToken || providedToken !== config.apiToken) {
-      sendError(res, req, 401, 'UNAUTHORIZED', 'Missing or invalid API token');
+    if (demoAccessKey && bodyAccessKey && bodyAccessKey === demoAccessKey) {
+      const session = createSession({ accessLevel: 'full', authMode: 'access_key' });
+      issueSessionCookie(res, session);
+      res.json({
+        success: true,
+        auth_mode: 'access_key',
+        access_level: 'full',
+        expires_at: new Date(session.expiresAt).toISOString(),
+      });
       return;
     }
 
-    const session = createSession();
-    res.setHeader('Set-Cookie', serializeCookie(sessionCookieName, session.sessionId, {
-      maxAgeSeconds: sessionTtlSeconds,
-      httpOnly: true,
-      sameSite: 'Lax',
-      secure: sessionSecureCookie,
-      path: '/',
-    }));
+    if (demoModeEnabled && !requireAuthEnabled) {
+      const session = createSession({ accessLevel: 'demo', authMode: 'demo' });
+      issueSessionCookie(res, session);
+      res.json({
+        success: true,
+        auth_mode: 'demo',
+        access_level: 'demo',
+        expires_at: new Date(session.expiresAt).toISOString(),
+      });
+      return;
+    }
 
-    res.json({
-      success: true,
-      auth_mode: 'token_session',
-      expires_at: new Date(session.expiresAt).toISOString(),
-    });
+    if (!authEnabled && !requireAuthEnabled) {
+      const session = createSession({ accessLevel: 'full', authMode: 'open' });
+      issueSessionCookie(res, session);
+      res.json({
+        success: true,
+        auth_mode: 'open',
+        access_level: 'full',
+        expires_at: new Date(session.expiresAt).toISOString(),
+      });
+      return;
+    }
+
+    sendError(res, req, 401, 'UNAUTHORIZED', 'Missing or invalid authentication');
   }));
 
   app.post('/api/v1/auth/logout', route(async (req, res) => {
@@ -572,30 +689,66 @@ async function main() {
   }));
 
   app.use('/api/v1', (req, res, next) => {
-    if (!authEnabled) {
-      next();
-      return;
-    }
-
-    if (req.path === '/health' || req.path === '/auth/session' || req.path === '/auth/logout') {
-      next();
-      return;
-    }
-
-    const token = getAccessToken(req);
-    if (token && token === config.apiToken) {
-      next();
-      return;
-    }
-
     const session = getSessionFromRequest(req);
     if (session) {
       req.session = session;
+    }
+    next();
+  });
+
+  app.use('/api/v1', (req, res, next) => {
+    const shouldEnforceAuth = requireAuthEnabled || (authEnabled && !demoModeEnabled);
+    if (!shouldEnforceAuth) {
+      next();
+      return;
+    }
+
+    if (req.path === '/health' || req.path === '/auth/state' || req.path === '/auth/session' || req.path === '/auth/logout') {
+      next();
+      return;
+    }
+
+    if (hasFullAccess(req)) {
       next();
       return;
     }
 
     sendError(res, req, 401, 'UNAUTHORIZED', 'Missing or invalid authentication');
+  });
+
+  app.use('/api/v1', (req, res, next) => {
+    if (!demoModeEnabled || requireAuthEnabled) {
+      next();
+      return;
+    }
+
+    if (hasFullAccess(req)) {
+      next();
+      return;
+    }
+
+    const method = String(req.method || 'GET').toUpperCase();
+    if (['GET', 'HEAD', 'OPTIONS'].includes(method)) {
+      next();
+      return;
+    }
+
+    if (demoWriteAllowlist.has(req.path)) {
+      next();
+      return;
+    }
+
+    sendError(
+      res,
+      req,
+      403,
+      'DEMO_MODE_RESTRICTED',
+      'This action is disabled in demo mode. Login for full access.',
+      {
+        allowed_demo_features: demoAllowedWriteFeatures,
+        contact_email: 'connect@kaushikh.xyz',
+      }
+    );
   });
 
   function resolveCubeReadyUrl(cubeApiUrl) {
@@ -791,6 +944,7 @@ async function main() {
     const readTelemetry = database.getReadTelemetry();
     const persistence = database.getPersistenceStatus();
     const cubeHealth = getCubeHealthSnapshot();
+    const derivedStatus = config.derivedEnabled ? derivedService.getStatus() : { enabled: false };
     const backendStatus = deriveBackendStatus(readTelemetry.db_status);
 
     if (backendStatus === 'up') {
@@ -817,6 +971,7 @@ async function main() {
       database: metrics.database,
       stats: metrics.stats,
       persistence,
+      derived: derivedStatus,
       cube: cubeHealth,
       cube_health: cubeHealth,
     };
@@ -919,8 +1074,24 @@ async function main() {
     });
   }
 
+  function ensureDerivedFeatureEnabled(req, res) {
+    if (config.derivedEnabled) return true;
+    sendError(res, req, 409, 'DERIVED_DISABLED', 'Derived tables feature is disabled');
+    return false;
+  }
+
   indexer.onEvent((event, data) => {
     realtimeHub.publish('index', String(event || 'index_event'), data || {});
+    if (config.derivedEnabled) {
+      try {
+        derivedService.onIndexerEvent(event, data || {});
+      } catch (error) {
+        log('warn', 'derived_indexer_event_failed', {
+          event: String(event || ''),
+          message: error instanceof Error ? error.message : String(error),
+        });
+      }
+    }
   });
 
   const originalLogActivity = database.logActivity.bind(database);
@@ -953,6 +1124,7 @@ async function main() {
       db_last_read_error: snapshot.db_last_read_error,
       source: snapshot.source,
       status_age_ms: snapshot.status_age_ms,
+      derived: snapshot.derived,
       cube: snapshot.cube,
       cube_health: snapshot.cube_health,
     });
@@ -1514,6 +1686,284 @@ async function main() {
     await executeStoredApiEndpoint(req, res, endpoint);
   }));
 
+  app.get('/api/v1/derived/status', route(async (req, res) => {
+    if (!ensureDerivedFeatureEnabled(req, res)) return;
+    res.json(derivedService.getStatus());
+  }));
+
+  app.get('/api/v1/derived/sources', route(async (req, res) => {
+    if (!ensureDerivedFeatureEnabled(req, res)) return;
+    const records = derivedService.listSources();
+    res.json({
+      count: records.length,
+      records,
+    });
+  }));
+
+  app.get('/api/v1/derived/sources/:sourceId/runs', route(async (req, res) => {
+    if (!ensureDerivedFeatureEnabled(req, res)) return;
+    const sourceId = String(req.params.sourceId || '');
+    const limit = parsePositiveInt(req.query.limit, 50, 1, 500);
+    const records = derivedService.listSourceRuns(sourceId, limit);
+    res.json({
+      count: records.length,
+      records,
+    });
+  }));
+
+  app.post('/api/v1/derived/sources', route(async (req, res) => {
+    if (!ensureDerivedFeatureEnabled(req, res)) return;
+    const body = ensureRequestBodyObject(req);
+    try {
+      const record = derivedService.createSource(body);
+      database.logActivity('derived_source_create', record.slug, `Created derived source ${record.slug}`);
+      realtimeHub.publish('api', 'derived_source_created', {
+        source_id: record.id,
+        source_slug: record.slug,
+      });
+      res.status(201).json(record);
+    } catch (error) {
+      if (isUniqueConstraintError(error)) {
+        sendError(res, req, 409, 'DERIVED_SOURCE_SLUG_CONFLICT', 'Derived source slug already exists');
+        return;
+      }
+      throw error;
+    }
+  }));
+
+  app.patch('/api/v1/derived/sources/:sourceId', route(async (req, res) => {
+    if (!ensureDerivedFeatureEnabled(req, res)) return;
+    const body = ensureRequestBodyObject(req);
+    const sourceId = String(req.params.sourceId || '');
+    try {
+      const record = derivedService.updateSource(sourceId, body);
+      database.logActivity('derived_source_update', record.slug, `Updated derived source ${record.slug}`);
+      realtimeHub.publish('api', 'derived_source_updated', {
+        source_id: record.id,
+        source_slug: record.slug,
+      });
+      res.json(record);
+    } catch (error) {
+      if (isUniqueConstraintError(error)) {
+        sendError(res, req, 409, 'DERIVED_SOURCE_SLUG_CONFLICT', 'Derived source slug already exists');
+        return;
+      }
+      throw error;
+    }
+  }));
+
+  app.delete('/api/v1/derived/sources/:sourceId', route(async (req, res) => {
+    if (!ensureDerivedFeatureEnabled(req, res)) return;
+    const sourceId = String(req.params.sourceId || '');
+    const existing = derivedService.getSourceById(sourceId);
+    if (!existing) {
+      sendError(res, req, 404, 'NOT_FOUND', `Derived source not found: ${sourceId}`);
+      return;
+    }
+
+    derivedService.deleteSource(sourceId);
+    database.logActivity('derived_source_delete', existing.slug, `Deleted derived source ${existing.slug}`);
+    realtimeHub.publish('api', 'derived_source_deleted', {
+      source_id: existing.id,
+      source_slug: existing.slug,
+    });
+    res.json({
+      deleted: true,
+      id: sourceId,
+    });
+  }));
+
+  app.post('/api/v1/derived/sources/:sourceId/test', route(async (req, res) => {
+    if (!ensureDerivedFeatureEnabled(req, res)) return;
+    const body = ensureRequestBodyObject(req);
+    const sourceId = String(req.params.sourceId || '');
+    const persist = parseBooleanFlag(body.persist, true);
+    const maxRecords = parsePositiveInt(body.max_records, 500, 1, 10000);
+    const result = await derivedService.runSource(sourceId, {
+      triggerSource: 'test',
+      persist,
+      maxRecords,
+    });
+    database.logActivity('derived_source_test', sourceId, `Ran derived source test (${result.records_fetched} records)`);
+    res.json(result);
+  }));
+
+  app.get('/api/v1/derived/pipelines', route(async (req, res) => {
+    if (!ensureDerivedFeatureEnabled(req, res)) return;
+    const records = derivedService.listPipelines();
+    res.json({
+      count: records.length,
+      records,
+    });
+  }));
+
+  app.get('/api/v1/derived/pipelines/:pipelineId/runs', route(async (req, res) => {
+    if (!ensureDerivedFeatureEnabled(req, res)) return;
+    const pipelineId = String(req.params.pipelineId || '');
+    const limit = parsePositiveInt(req.query.limit, 100, 1, 1000);
+    const records = derivedService.listPipelineRuns(pipelineId, limit);
+    res.json({
+      count: records.length,
+      records,
+    });
+  }));
+
+  app.post('/api/v1/derived/pipelines', route(async (req, res) => {
+    if (!ensureDerivedFeatureEnabled(req, res)) return;
+    const body = ensureRequestBodyObject(req);
+    try {
+      const record = derivedService.createPipeline(body);
+      database.logActivity('derived_pipeline_create', record.slug, `Created derived pipeline ${record.slug}`);
+      realtimeHub.publish('api', 'derived_pipeline_created', {
+        pipeline_id: record.id,
+        pipeline_slug: record.slug,
+      });
+      res.status(201).json(record);
+    } catch (error) {
+      if (isUniqueConstraintError(error)) {
+        sendError(res, req, 409, 'DERIVED_PIPELINE_SLUG_CONFLICT', 'Derived pipeline slug already exists');
+        return;
+      }
+      throw error;
+    }
+  }));
+
+  app.post('/api/v1/derived/pipelines/:pipelineId/clone', route(async (req, res) => {
+    if (!ensureDerivedFeatureEnabled(req, res)) return;
+    const body = ensureRequestBodyObject(req);
+    const pipelineId = String(req.params.pipelineId || '');
+    try {
+      const record = derivedService.clonePipeline(pipelineId, body);
+      database.logActivity(
+        'derived_pipeline_clone',
+        record.slug,
+        `Cloned derived pipeline from ${pipelineId} to ${record.slug}`
+      );
+      realtimeHub.publish('api', 'derived_pipeline_cloned', {
+        source_pipeline_id: pipelineId,
+        pipeline_id: record.id,
+        pipeline_slug: record.slug,
+      });
+      res.status(201).json(record);
+    } catch (error) {
+      if (isUniqueConstraintError(error)) {
+        sendError(res, req, 409, 'DERIVED_PIPELINE_SLUG_CONFLICT', 'Derived pipeline slug already exists');
+        return;
+      }
+      throw error;
+    }
+  }));
+
+  app.patch('/api/v1/derived/pipelines/:pipelineId', route(async (req, res) => {
+    if (!ensureDerivedFeatureEnabled(req, res)) return;
+    const body = ensureRequestBodyObject(req);
+    const pipelineId = String(req.params.pipelineId || '');
+    try {
+      const record = derivedService.updatePipeline(pipelineId, body);
+      database.logActivity('derived_pipeline_update', record.slug, `Updated derived pipeline ${record.slug}`);
+      realtimeHub.publish('api', 'derived_pipeline_updated', {
+        pipeline_id: record.id,
+        pipeline_slug: record.slug,
+      });
+      res.json(record);
+    } catch (error) {
+      if (isUniqueConstraintError(error)) {
+        sendError(res, req, 409, 'DERIVED_PIPELINE_SLUG_CONFLICT', 'Derived pipeline slug already exists');
+        return;
+      }
+      throw error;
+    }
+  }));
+
+  app.delete('/api/v1/derived/pipelines/:pipelineId', route(async (req, res) => {
+    if (!ensureDerivedFeatureEnabled(req, res)) return;
+    const pipelineId = String(req.params.pipelineId || '');
+    const existing = derivedService.getPipelineById(pipelineId);
+    if (!existing) {
+      sendError(res, req, 404, 'NOT_FOUND', `Derived pipeline not found: ${pipelineId}`);
+      return;
+    }
+
+    derivedService.deletePipeline(pipelineId);
+    database.logActivity('derived_pipeline_delete', existing.slug, `Deleted derived pipeline ${existing.slug}`);
+    realtimeHub.publish('api', 'derived_pipeline_deleted', {
+      pipeline_id: existing.id,
+      pipeline_slug: existing.slug,
+    });
+    res.json({
+      deleted: true,
+      id: pipelineId,
+    });
+  }));
+
+  app.post('/api/v1/derived/pipelines/:pipelineId/run', route(async (req, res) => {
+    if (!ensureDerivedFeatureEnabled(req, res)) return;
+    const body = ensureRequestBodyObject(req);
+    const pipelineId = String(req.params.pipelineId || '');
+    const limit = parsePositiveInt(body.limit, config.derivedBatchSize, 1, 20000);
+    const triggerSource = body.trigger_source ? String(body.trigger_source) : 'manual';
+    const reconcile = parseBooleanFlag(body.reconcile, false);
+    const result = await derivedService.runPipelineById(pipelineId, {
+      triggerSource,
+      reconcile,
+      limit,
+      preview: false,
+    });
+    database.logActivity(
+      'derived_pipeline_run',
+      result.pipeline?.slug || pipelineId,
+      `Ran derived pipeline (${result.run?.rows_read || 0} rows read, ${result.run?.rows_written || 0} rows written)`
+    );
+    res.json(result);
+  }));
+
+  app.post('/api/v1/derived/pipelines/run-all', route(async (req, res) => {
+    if (!ensureDerivedFeatureEnabled(req, res)) return;
+    const body = ensureRequestBodyObject(req);
+    const limit = parsePositiveInt(body.limit, config.derivedBatchSize, 1, 20000);
+    const triggerSource = body.trigger_source ? String(body.trigger_source) : 'manual_run_all';
+    const reconcile = parseBooleanFlag(body.reconcile, false);
+    const includeDisabled = parseBooleanFlag(body.include_disabled, false);
+    const result = await derivedService.runAllPipelines({
+      triggerSource,
+      reconcile,
+      includeDisabled,
+      limit,
+    });
+    database.logActivity(
+      'derived_pipeline_run_all',
+      null,
+      `Ran ${result.total} derived pipelines (${result.success_count} success, ${result.failed_count} failed)`
+    );
+    realtimeHub.publish('api', 'derived_pipeline_run_all', {
+      total: result.total,
+      success_count: result.success_count,
+      failed_count: result.failed_count,
+      trigger_source: triggerSource,
+      reconcile,
+    });
+    res.json(result);
+  }));
+
+  app.post('/api/v1/derived/pipelines/:pipelineId/preview', route(async (req, res) => {
+    if (!ensureDerivedFeatureEnabled(req, res)) return;
+    const body = ensureRequestBodyObject(req);
+    const pipelineId = String(req.params.pipelineId || '');
+    const limit = parsePositiveInt(body.limit, 25, 1, 500);
+    const result = await derivedService.runPipelinePreview(pipelineId, { limit });
+    res.json(result);
+  }));
+
+  app.get('/api/v1/derived/runs', route(async (req, res) => {
+    if (!ensureDerivedFeatureEnabled(req, res)) return;
+    const limit = parsePositiveInt(req.query.limit, 100, 1, 1000);
+    const records = derivedService.listPipelineRuns(null, limit);
+    res.json({
+      count: records.length,
+      records,
+    });
+  }));
+
   app.get('/api/v1/cube/health', route(async (req, res) => {
     res.json(getCubeHealthSnapshot());
   }));
@@ -1750,6 +2200,7 @@ async function main() {
       clearInterval(agentSchedulerTimer);
       agentSchedulerTimer = null;
     }
+    derivedService.close();
     realtimeHub.close();
     indexer.stop();
     server.close(async () => {

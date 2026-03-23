@@ -78,6 +78,12 @@ test('createConfig sets cube defaults', () => {
   assert.equal(config.elizaApiKey, '');
   assert.equal(config.saveIntervalMs, 30000);
   assert.equal(config.saveDebounceMs, 5000);
+  assert.equal(config.derivedEnabled, true);
+  assert.equal(config.derivedBatchSize, 2000);
+  assert.equal(config.derivedReconcileCron, '0 2 * * *');
+  assert.equal(config.bonzoApiBaseUrl, 'https://data.bonzo.finance/');
+  assert.equal(config.externalSourceTimeoutMs, 8000);
+  assert.equal(config.externalSourceMaxRetries, 3);
   assert.equal(config.mirrorPoolProbeEnabled, true);
   assert.equal(config.mirrorPoolProbeTimeoutMs, 1500);
   assert.equal(config.mirrorPoolProbePath, '/api/v1/network/nodes?limit=1');
@@ -103,6 +109,14 @@ test('createConfig parses security and agent env overrides', () => {
     SEFI_ELIZA_API_KEY: 'eliza-key',
     SEFI_SAVE_INTERVAL_MS: '60000',
     SEFI_SAVE_DEBOUNCE_MS: '9000',
+    SEFI_DERIVED_ENABLED: 'false',
+    SEFI_DERIVED_BATCH_SIZE: '1500',
+    SEFI_DERIVED_RECONCILE_CRON: '15 1 * * *',
+    SEFI_BONZO_API_BASE_URL: 'https://mainnet-data-staging.bonzo.finance/',
+    SEFI_EXTERNAL_SOURCE_TIMEOUT_MS: '12000',
+    SEFI_EXTERNAL_SOURCE_MAX_RETRIES: '5',
+    SEFI_REQUIRE_AUTH: 'true',
+    SEFI_DEMO_ACCESS_KEY: 'demo-secret',
   });
 
   assert.equal(config.apiToken, 'secret-token');
@@ -123,4 +137,19 @@ test('createConfig parses security and agent env overrides', () => {
   assert.equal(config.elizaApiKey, 'eliza-key');
   assert.equal(config.saveIntervalMs, 60000);
   assert.equal(config.saveDebounceMs, 9000);
+  assert.equal(config.derivedEnabled, false);
+  assert.equal(config.derivedBatchSize, 1500);
+  assert.equal(config.derivedReconcileCron, '15 1 * * *');
+  assert.equal(config.bonzoApiBaseUrl, 'https://mainnet-data-staging.bonzo.finance/');
+  assert.equal(config.externalSourceTimeoutMs, 12000);
+  assert.equal(config.externalSourceMaxRetries, 5);
+  assert.equal(config.requireAuth, true);
+  assert.equal(config.demoAccessKey, 'demo-secret');
+});
+
+test('createConfig rejects strict auth without credentials', () => {
+  assert.throws(
+    () => createConfig({ SEFI_REQUIRE_AUTH: 'true' }),
+    /SEFI_REQUIRE_AUTH=true requires SEFI_API_TOKEN or SEFI_DEMO_ACCESS_KEY/
+  );
 });
