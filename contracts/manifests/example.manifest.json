@@ -1,0 +1,33 @@
+{
+  "protocol": "Example Protocol",
+  "network": "testnet",
+  "contracts": [
+    {
+      "id": "0.0.5005",
+      "name": "CoreController",
+      "category": "core",
+      "priority": true,
+      "asset": "EXM"
+    },
+    {
+      "id": "0x00000000000000000000000000000000000000AA",
+      "name": "VaultStrategy",
+      "category": "vault",
+      "evm": "0x00000000000000000000000000000000000000AA"
+    }
+  ],
+  "tokens": [
+    {
+      "id": "0.0.6006",
+      "name": "Example Token",
+      "symbol": "EXM",
+      "decimals": 8
+    }
+  ],
+  "topics": [
+    {
+      "id": "0.0.7007",
+      "name": "Protocol Events"
+    }
+  ]
+}

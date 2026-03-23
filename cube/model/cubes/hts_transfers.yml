@@ -1,0 +1,60 @@
+cubes:
+  - name: hts_transfers
+    sql_table: main.hts_transfers
+    data_source: default
+
+    joins: []
+
+    dimensions:
+      - name: id
+        sql: id
+        type: number
+        primary_key: true
+
+      - name: token_id
+        sql: token_id
+        type: string
+
+      - name: network
+        sql: network
+        type: string
+
+      - name: account_id
+        sql: account_id
+        type: string
+
+      - name: amount_signed
+        sql: amount_signed
+        type: string
+
+      - name: amount_abs
+        sql: amount_abs
+        type: string
+
+      - name: transfer_index
+        sql: transfer_index
+        type: string
+
+      - name: tx_id
+        sql: tx_id
+        type: string
+
+      - name: is_approval
+        sql: is_approval
+        type: boolean
+
+      - name: timestamp
+        sql: >-
+          CASE
+            WHEN consensus_timestamp IS NULL OR consensus_timestamp = '' OR consensus_timestamp = '0.0' OR instr(consensus_timestamp, '.') = 0 THEN NULL
+            ELSE datetime(CAST(substr(consensus_timestamp, 1, instr(consensus_timestamp, '.') - 1) AS INTEGER), 'unixepoch')
+          END
+        type: time
+
+      - name: indexed_at
+        sql: indexed_at
+        type: time
+
+    measures:
+      - name: count
+        type: count

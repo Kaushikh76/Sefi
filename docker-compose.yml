@@ -1,0 +1,90 @@
+services:
+  eliza:
+    image: ghcr.io/elizaos/eliza:latest
+    profiles: ["agents"]
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    ports:
+      - 3001:3000
+    environment:
+      - NODE_ENV=production
+      - SERVER_PORT=3000
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - "node -e \"fetch('http://127.0.0.1:3000/health').then((r) => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))\""
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 30s
+
+  cube:
+    image: cubejs/cube:latest
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    ports:
+      - 4100:4000
+    environment:
+      - CUBEJS_DB_TYPE=sqlite
+      - CUBEJS_DB_NAME=/cube/conf/data/sefi.cube.db
+      - CUBEJS_DEV_MODE=true
+      - CUBEJS_API_SECRET=sefi-local-dev
+    volumes:
+      - ./cube:/cube/conf
+      - ./data:/cube/conf/data
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - "node -e \"fetch('http://127.0.0.1:4000/readyz').then((r) => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))\""
+      interval: 5s
+      timeout: 3s
+      retries: 30
+      start_period: 20s
+
+  backend:
+    profiles: ["containerized"]
+    build:
+      context: ./backend
+    depends_on:
+      cube:
+        condition: service_healthy
+    environment:
+      - SEFI_PORT=3210
+      - SEFI_NETWORK=${SEFI_NETWORK:-testnet}
+      - SEFI_NETWORKS=${SEFI_NETWORKS:-mainnet,testnet}
+      - SEFI_DB_PATH=/workspace/data/sefi.db
+      - SEFI_CUBE_DB_PATH=/workspace/data/sefi.cube.db
+      - SEFI_MANIFESTS_DIR=/workspace/contracts/manifests
+      - SEFI_CUBE_MODEL_DIR=/workspace/cube-model
+      - SEFI_CUBE_API_URL=http://cube:4000/cubejs-api/v1
+      - SEFI_CUBE_API_TOKEN=sefi-local-dev
+      - SEFI_CUBE_HEALTH_TIMEOUT_MS=${SEFI_CUBE_HEALTH_TIMEOUT_MS:-10000}
+      - SEFI_CUBE_HEALTH_CACHE_TTL_MS=${SEFI_CUBE_HEALTH_CACHE_TTL_MS:-1500}
+      - SEFI_REQUEST_TIMEOUT_MS=${SEFI_REQUEST_TIMEOUT_MS:-15000}
+      - SEFI_SAVE_INTERVAL_MS=${SEFI_SAVE_INTERVAL_MS:-30000}
+      - SEFI_SAVE_DEBOUNCE_MS=${SEFI_SAVE_DEBOUNCE_MS:-5000}
+      - SEFI_API_TOKEN=${SEFI_API_TOKEN:-}
+      - SEFI_ALLOWED_ORIGINS=${SEFI_ALLOWED_ORIGINS:-*}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - OPENAI_API_BASE_URL=${OPENAI_API_BASE_URL:-https://api.openai.com/v1}
+      - OPENAI_MODEL_FAST=${OPENAI_MODEL_FAST:-gpt-5-mini}
+      - OPENAI_MODEL_STRONG=${OPENAI_MODEL_STRONG:-gpt-5}
+      - SEFI_AGENT_AUTO_EXECUTE_DEFAULT=${SEFI_AGENT_AUTO_EXECUTE_DEFAULT:-true}
+      - SEFI_AGENT_SQL_FALLBACK_DEFAULT=${SEFI_AGENT_SQL_FALLBACK_DEFAULT:-false}
+      - SEFI_AGENT_MAX_QUESTION_CHARS=${SEFI_AGENT_MAX_QUESTION_CHARS:-2000}
+      - SEFI_AGENT_AUTONOMOUS_NETWORKS=${SEFI_AGENT_AUTONOMOUS_NETWORKS:-testnet}
+      - SEFI_ELIZA_BASE_URL=${SEFI_ELIZA_BASE_URL:-http://eliza:3000}
+      - SEFI_ELIZA_API_KEY=${SEFI_ELIZA_API_KEY:-}
+    volumes:
+      - ./data:/workspace/data
+      - ./contracts:/workspace/contracts
+      - ./cube/model:/workspace/cube-model
+    ports:
+      - 3210:3210

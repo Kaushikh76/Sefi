@@ -1,0 +1,13 @@
+services:
+  cube:
+    image: cubejs/cube:latest
+    user: "${UID}:${GID}"
+    ports:
+      - 4100:4000
+    environment:
+      - CUBEJS_DB_TYPE=sqlite
+      - CUBEJS_DB_NAME=/cube/conf/data/sefi.cube.db
+      - CUBEJS_DEV_MODE=true
+    volumes:
+      - .:/cube/conf
+      - ../data:/cube/conf/data

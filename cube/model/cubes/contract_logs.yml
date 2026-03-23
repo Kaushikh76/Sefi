@@ -1,0 +1,75 @@
+cubes:
+  - name: contract_logs
+    sql_table: main.contract_logs
+    data_source: default
+
+    joins:
+      - name: contracts
+        sql: "{CUBE.contract_id} = {contracts.contract_id}"
+        relationship: many_to_one
+
+    dimensions:
+      - name: id
+        sql: id
+        type: number
+        primary_key: true
+
+      - name: contract_id
+        sql: contract_id
+        type: string
+
+      - name: tx_hash
+        sql: tx_hash
+        type: string
+
+      - name: event_name
+        sql: event_name
+        type: string
+
+      - name: topic0
+        sql: topic0
+        type: string
+
+      - name: topic1
+        sql: topic1
+        type: string
+
+      - name: topic2
+        sql: topic2
+        type: string
+
+      - name: topic3
+        sql: topic3
+        type: string
+
+      - name: data
+        sql: data
+        type: string
+
+      - name: block_number
+        sql: block_number
+        type: number
+
+      - name: log_index
+        sql: log_index
+        type: number
+
+      - name: timestamp
+        sql: >-
+          CASE
+            WHEN timestamp IS NULL OR timestamp = '' OR timestamp = '0.0' OR instr(timestamp, '.') = 0 THEN NULL
+            ELSE datetime(CAST(substr(timestamp, 1, instr(timestamp, '.') - 1) AS INTEGER), 'unixepoch')
+          END
+        type: time
+
+      - name: indexed_at
+        sql: indexed_at
+        type: time
+
+    measures:
+      - name: count
+        type: count
+
+      - name: max_block_number
+        sql: block_number
+        type: max

@@ -1,0 +1,769 @@
+{
+  "protocol": "Bonzo Finance",
+  "network": "mainnet",
+  "contracts": [
+    {
+      "id": "0.0.7308480",
+      "name": "AaveOracle",
+      "category": "lend-oracle",
+      "evm": "0xc0Bb4030b55093981700559a0B751DCf7Db03cBB",
+      "priority": true
+    },
+    {
+      "id": "0.0.7308483",
+      "name": "AaveProtocolDataProvider",
+      "category": "lend-helper",
+      "evm": "0x78feDC4D7010E409A0c0c7aF964cc517D3dCde18"
+    },
+    {
+      "id": "0.0.9155090",
+      "name": "aBONZO",
+      "category": "lend-atoken",
+      "evm": "0xC5aa104d5e7D9baE3A69Ddd5A722b8F6B69729c9",
+      "asset": "BONZO"
+    },
+    {
+      "id": "0.0.7308512",
+      "name": "aDOVU",
+      "category": "lend-atoken",
+      "evm": "0x89D2789481cB4CB5B6949Ff55EBA5629c5bC5B1E",
+      "asset": "DOVU"
+    },
+    {
+      "id": "0.0.8677321",
+      "name": "aGRELF",
+      "category": "lend-atoken",
+      "evm": "0xb8c34c9a46AEdf1decb846F942861EeE7dE78075",
+      "asset": "GRELF"
+    },
+    {
+      "id": "0.0.7308502",
+      "name": "aHBARX",
+      "category": "lend-atoken",
+      "evm": "0x40EBC87627Fe4689567C47c8C9C84EDC4Cf29132",
+      "asset": "HBARX"
+    },
+    {
+      "id": "0.0.7308515",
+      "name": "aHST",
+      "category": "lend-atoken",
+      "evm": "0x2e63e864AAD2ce87b45d2C93bc126850DC5122c9",
+      "asset": "HST"
+    },
+    {
+      "id": "0.0.7308499",
+      "name": "aKARATE",
+      "category": "lend-atoken",
+      "evm": "0x98262552C8246Ffb55E3539Ceb51838912402959",
+      "asset": "KARATE"
+    },
+    {
+      "id": "0.0.9132058",
+      "name": "aKBL",
+      "category": "lend-atoken",
+      "evm": "0xC45A34b9D9e29fBfCAACC9193FD0CE950e63Ba81",
+      "asset": "KBL"
+    },
+    {
+      "id": "0.0.7308518",
+      "name": "aPACK",
+      "category": "lend-atoken",
+      "evm": "0x5F98C43ce4b4765638d69B4a2407a2186A347CB9",
+      "asset": "PACK"
+    },
+    {
+      "id": "0.0.7308505",
+      "name": "aSAUCE",
+      "category": "lend-atoken",
+      "evm": "0x2bcC0a304c0bc816D501c7C647D958b9A5bc716d",
+      "asset": "SAUCE"
+    },
+    {
+      "id": "0.0.7308521",
+      "name": "aSTEAM",
+      "category": "lend-atoken",
+      "evm": "0x46BEf910150a3880ce6eAC60A059E70494A4805e",
+      "asset": "STEAM"
+    },
+    {
+      "id": "0.0.7308496",
+      "name": "aUSDC",
+      "category": "lend-atoken",
+      "evm": "0xB7687538c7f4CAD022d5e97CC778d0b46457c5DB",
+      "asset": "USDC"
+    },
+    {
+      "id": "0.0.7308509",
+      "name": "aWHBAR",
+      "category": "lend-atoken",
+      "evm": "0x6e96a607F2F5657b39bf58293d1A006f9415aF32",
+      "asset": "WHBAR"
+    },
+    {
+      "id": "0.0.7308493",
+      "name": "aXSAUCE",
+      "category": "lend-atoken",
+      "evm": "0xEc9CEF1167b4673726B1e5f5A978150e63cDf23b",
+      "asset": "XSAUCE"
+    },
+    {
+      "id": "0x118ac3CD5362eF452293304b1A660A9D78Bdfe88",
+      "name": "BeefyOracleChainlink",
+      "category": "vault-oracle",
+      "evm": "0x118ac3CD5362eF452293304b1A660A9D78Bdfe88"
+    },
+    {
+      "id": "0x5DfBB5EF52Cf1932Eeb8324DA4E8D287e06FE915",
+      "name": "BeefyOracleOwner",
+      "category": "vault-oracle",
+      "evm": "0x5DfBB5EF52Cf1932Eeb8324DA4E8D287e06FE915"
+    },
+    {
+      "id": "0xf6cc94f16bc141115fcb9b587297aecfa14f4eb6",
+      "name": "BONZO_XBONZO_Pool",
+      "category": "vault-dual-pool",
+      "evm": "0xf6cc94f16bc141115fcb9b587297aecfa14f4eb6"
+    },
+    {
+      "id": "0x3Dab58797e057878d3cD8f78F28C6967104FcD0c",
+      "name": "BONZO_XBONZO_Strategy",
+      "category": "vault-dual-strategy",
+      "evm": "0x3Dab58797e057878d3cD8f78F28C6967104FcD0c"
+    },
+    {
+      "id": "0xcfba07324bd207C3ED41416a9a36f8184F9a2134",
+      "name": "BONZO_XBONZO_Vault",
+      "category": "vault-dual-vault",
+      "evm": "0xcfba07324bd207C3ED41416a9a36f8184F9a2134"
+    },
+    {
+      "id": "0x00000000000000000000000000000000005dbdc1",
+      "name": "BonzoFeeRecipient",
+      "category": "vault-dual-core",
+      "evm": "0x00000000000000000000000000000000005dbdc1"
+    },
+    {
+      "id": "0.0.9155092",
+      "name": "debtBONZO",
+      "category": "lend-debt",
+      "evm": "0x1790C9169480c5C67D8011cd0311DDE1b2DC76e0",
+      "asset": "BONZO"
+    },
+    {
+      "id": "0.0.7308514",
+      "name": "debtDOVU",
+      "category": "lend-debt",
+      "evm": "0x9d81E1676A7e116ec725208DdeAB11929eA3F7A6",
+      "asset": "DOVU"
+    },
+    {
+      "id": "0.0.8677323",
+      "name": "debtGRELF",
+      "category": "lend-debt",
+      "evm": "0x0E509Fc72f4b5d97494c0d45fcd1cF04d531Be44",
+      "asset": "GRELF"
+    },
+    {
+      "id": "0.0.7308504",
+      "name": "debtHBARX",
+      "category": "lend-debt",
+      "evm": "0xF4167Af5C303ec2aD1B96316fE013CA96Eb141B5",
+      "asset": "HBARX"
+    },
+    {
+      "id": "0.0.7308517",
+      "name": "debtHST",
+      "category": "lend-debt",
+      "evm": "0xdc6e9E967648cd28E8BaF2EB1124ef7C9C5Bd027",
+      "asset": "HST"
+    },
+    {
+      "id": "0.0.7308501",
+      "name": "debtKARATE",
+      "category": "lend-debt",
+      "evm": "0xB6209F33982CE99139Ab325b13B260d32287A807",
+      "asset": "KARATE"
+    },
+    {
+      "id": "0.0.9132060",
+      "name": "debtKBL",
+      "category": "lend-debt",
+      "evm": "0x6a74429E0D761085C4D5520A14ab59874dfe1C06",
+      "asset": "KBL"
+    },
+    {
+      "id": "0.0.7308520",
+      "name": "debtPACK",
+      "category": "lend-debt",
+      "evm": "0x63c7EF5398E8Fe23D95E762802F011590A7816a1",
+      "asset": "PACK"
+    },
+    {
+      "id": "0.0.7308507",
+      "name": "debtSAUCE",
+      "category": "lend-debt",
+      "evm": "0x736c5dbB8ADC643f04c1e13a9C25f28d3D4f0503",
+      "asset": "SAUCE"
+    },
+    {
+      "id": "0.0.7308523",
+      "name": "debtSTEAM",
+      "category": "lend-debt",
+      "evm": "0xdFD1D43cbd700AEC5bcc151d028274412d31db70",
+      "asset": "STEAM"
+    },
+    {
+      "id": "0.0.7308498",
+      "name": "debtUSDC",
+      "category": "lend-debt",
+      "evm": "0x8a90C2f80Fc266e204cb37387c69EA2ed42A3cc1",
+      "asset": "USDC"
+    },
+    {
+      "id": "0.0.7308511",
+      "name": "debtWHBAR",
+      "category": "lend-debt",
+      "evm": "0xCD5A1FF3AD6EDd7e85ae6De3854f3915dD8c9103",
+      "asset": "WHBAR"
+    },
+    {
+      "id": "0.0.7308495",
+      "name": "debtXSAUCE",
+      "category": "lend-debt",
+      "evm": "0x08c816eC7aC0580c802151E4efFbDa687f7Cac2a",
+      "asset": "XSAUCE"
+    },
+    {
+      "id": "0x512c307b0c2e5ad652195c6fae14fe3fc1a24933",
+      "name": "Deployer",
+      "category": "vault-dual-core",
+      "evm": "0x512c307b0c2e5ad652195c6fae14fe3fc1a24933"
+    },
+    {
+      "id": "0x84e653E209525f70dC1410a304dFF98fE47CfD4a",
+      "name": "DepositGuard",
+      "category": "vault-single-core",
+      "evm": "0x84e653E209525f70dC1410a304dFF98fE47CfD4a"
+    },
+    {
+      "id": "0xC159b19C5bd0E4a0709eC13C1303Ff2Bb67F7145",
+      "name": "Gnosis",
+      "category": "vault-single-core",
+      "evm": "0xC159b19C5bd0E4a0709eC13C1303Ff2Bb67F7145"
+    },
+    {
+      "id": "0xE7f31dD688Ce850e44902b2c55D703BC2d91a84e",
+      "name": "HBARX_Strategy",
+      "category": "vault-lst-strategy",
+      "evm": "0xE7f31dD688Ce850e44902b2c55D703BC2d91a84e"
+    },
+    {
+      "id": "0x10288A0F368c82922a421EEb4360537b93af3780",
+      "name": "HBARX_Vault",
+      "category": "vault-lst-vault",
+      "evm": "0x10288A0F368c82922a421EEb4360537b93af3780"
+    },
+    {
+      "id": "0x4fA116f8864eE7d7cee1F5Fbb58d41b70d75A529",
+      "name": "ICHIVaultDeployerLib",
+      "category": "vault-single-core",
+      "evm": "0x4fA116f8864eE7d7cee1F5Fbb58d41b70d75A529"
+    },
+    {
+      "id": "0x822b0bE4958ab5b4A48DA3c5f68Fc54846093618",
+      "name": "ICHIVaultFactory",
+      "category": "vault-single-core",
+      "evm": "0x822b0bE4958ab5b4A48DA3c5f68Fc54846093618"
+    },
+    {
+      "id": "0xaba50e992ab2df8f197aac4d3ec284f55b43af9c",
+      "name": "Keeper",
+      "category": "vault-dual-core",
+      "evm": "0xaba50e992ab2df8f197aac4d3ec284f55b43af9c"
+    },
+    {
+      "id": "0.0.7308459",
+      "name": "LendingPool",
+      "category": "lend-core",
+      "evm": "0x236897c518996163E7b313aD21D1C9fCC7BA1afc",
+      "priority": true
+    },
+    {
+      "id": "0.0.7308451",
+      "name": "LendingPoolAddressesProvider",
+      "category": "lend-core",
+      "evm": "0x76b846DAB3646527bfb75952E1f33AfAA72B56D1"
+    },
+    {
+      "id": "0.0.7308449",
+      "name": "LendingPoolAddressesProviderRegistry",
+      "category": "lend-core",
+      "evm": "0xE20273F10D1b85BaF56F6063cd5271C885427EC5"
+    },
+    {
+      "id": "0.0.7308529",
+      "name": "LendingPoolCollateralManager",
+      "category": "lend-core",
+      "evm": "0x7687E1AaAD6cE335fb7d64ede7Dd7273De883698",
+      "priority": true
+    },
+    {
+      "id": "0x7687E1AaAD6cE335fb7d64ede7Dd7273De883698",
+      "name": "LendingPoolCollateralManagerImpl",
+      "category": "lend-implementation",
+      "evm": "0x7687E1AaAD6cE335fb7d64ede7Dd7273De883698"
+    },
+    {
+      "id": "0.0.7308462",
+      "name": "LendingPoolConfigurator",
+      "category": "lend-core",
+      "evm": "0xf41332220e51Ca8dB22De683fB0157e644e7A963"
+    },
+    {
+      "id": "0x650f70Ec874DAB7464FEAc9Ba55D07f3896721a6",
+      "name": "LendingPoolConfiguratorImpl",
+      "category": "lend-implementation",
+      "evm": "0x650f70Ec874DAB7464FEAc9Ba55D07f3896721a6"
+    },
+    {
+      "id": "0x5290b075d737606fccccA2f745D7337E0fCe633B",
+      "name": "LendingPoolImpl",
+      "category": "lend-implementation",
+      "evm": "0x5290b075d737606fccccA2f745D7337E0fCe633B"
+    },
+    {
+      "id": "0.0.7308481",
+      "name": "LendingRateOracle",
+      "category": "lend-oracle",
+      "evm": "0x2a9272C588c8b6C04757577d08285211C18232DD"
+    },
+    {
+      "id": "0x00000000000000000000000000000000003c3951",
+      "name": "PoolFactory",
+      "category": "vault-single-core",
+      "evm": "0x00000000000000000000000000000000003c3951"
+    },
+    {
+      "id": "0.0.7308479",
+      "name": "PriceOracle",
+      "category": "lend-oracle",
+      "evm": "0x9F1981afD19e2881A4Acb39aa144c7fBc4a6D8b3"
+    },
+    {
+      "id": "0xcfeffaae43f176f91602d75ec1d0637e273c973b",
+      "name": "SAUCE_XSAUCE_Pool",
+      "category": "vault-dual-pool",
+      "evm": "0xcfeffaae43f176f91602d75ec1d0637e273c973b"
+    },
+    {
+      "id": "0xE9Ab1D3C3d086A8efA0f153f107B096BEaBDee6f",
+      "name": "SAUCE_XSAUCE_Strategy",
+      "category": "vault-dual-strategy",
+      "evm": "0xE9Ab1D3C3d086A8efA0f153f107B096BEaBDee6f"
+    },
+    {
+      "id": "0x8AEE31dFF6264074a1a3929432070E1605F6b783",
+      "name": "SAUCE_XSAUCE_Vault",
+      "category": "vault-dual-vault",
+      "evm": "0x8AEE31dFF6264074a1a3929432070E1605F6b783"
+    },
+    {
+      "id": "0x12ab96bebf0bc4fe1a8f62049c7d840ac949cab6",
+      "name": "Strategist",
+      "category": "vault-dual-core",
+      "evm": "0x12ab96bebf0bc4fe1a8f62049c7d840ac949cab6"
+    },
+    {
+      "id": "0xC2343277CAE1090052c770dEf66Cb5911fAF4f05",
+      "name": "Strategy_BONZO_HBAR",
+      "category": "vault-single-strategy",
+      "evm": "0xC2343277CAE1090052c770dEf66Cb5911fAF4f05"
+    },
+    {
+      "id": "0xA1ffF8A98edb1c314cf6a64b47b842A2954304a1",
+      "name": "Strategy_DOVU_HBAR",
+      "category": "vault-single-strategy",
+      "evm": "0xA1ffF8A98edb1c314cf6a64b47b842A2954304a1"
+    },
+    {
+      "id": "0x4e1bc1184Df76e897BA5eaD761f75B01F6197726",
+      "name": "Strategy_HBAR_BONZO",
+      "category": "vault-single-strategy",
+      "evm": "0x4e1bc1184Df76e897BA5eaD761f75B01F6197726"
+    },
+    {
+      "id": "0xDAd5F1F4094451Ffd8DDD65dD48A99e7E277FbC9",
+      "name": "Strategy_HBAR_DOVU",
+      "category": "vault-single-strategy",
+      "evm": "0xDAd5F1F4094451Ffd8DDD65dD48A99e7E277FbC9"
+    },
+    {
+      "id": "0x1787Cd1DFAd83e85c2D4713F7032521592FA807B",
+      "name": "Strategy_HBAR_JAM",
+      "category": "vault-single-strategy",
+      "evm": "0x1787Cd1DFAd83e85c2D4713F7032521592FA807B"
+    },
+    {
+      "id": "0xC260c60b3e974F54A73c0a6F540ee5eC979fDc00",
+      "name": "Strategy_HBAR_PACK",
+      "category": "vault-single-strategy",
+      "evm": "0xC260c60b3e974F54A73c0a6F540ee5eC979fDc00"
+    },
+    {
+      "id": "0x9271898ceF0d44d1704245C2232D56C05150cdAf",
+      "name": "Strategy_HBAR_SAUCE",
+      "category": "vault-single-strategy",
+      "evm": "0x9271898ceF0d44d1704245C2232D56C05150cdAf"
+    },
+    {
+      "id": "0xB8021f6a7BE89DFd0F66B89CE4cae76De33A90A2",
+      "name": "Strategy_HBAR_USDC",
+      "category": "vault-single-strategy",
+      "evm": "0xB8021f6a7BE89DFd0F66B89CE4cae76De33A90A2"
+    },
+    {
+      "id": "0x7AbF45908d733a60799d1B4B04E373366770EEcC",
+      "name": "Strategy_JAM_HBAR",
+      "category": "vault-single-strategy",
+      "evm": "0x7AbF45908d733a60799d1B4B04E373366770EEcC"
+    },
+    {
+      "id": "0x3cE3A64669d1E3ab4789235Fc3e019234C4be9B7",
+      "name": "Strategy_PACK_HBAR",
+      "category": "vault-single-strategy",
+      "evm": "0x3cE3A64669d1E3ab4789235Fc3e019234C4be9B7"
+    },
+    {
+      "id": "0x5241E22Feb810C50F32Bf16a0edD4105E47Be165",
+      "name": "Strategy_SAUCE_HBAR",
+      "category": "vault-single-strategy",
+      "evm": "0x5241E22Feb810C50F32Bf16a0edD4105E47Be165"
+    },
+    {
+      "id": "0x5dAE71d8a6F980f88F6586dF1A528E53456b8C97",
+      "name": "Strategy_USDC_HBAR",
+      "category": "vault-single-strategy",
+      "evm": "0x5dAE71d8a6F980f88F6586dF1A528E53456b8C97"
+    },
+    {
+      "id": "0xb9A69E0261f67Da41FccBEF8511b99E2D8255806",
+      "name": "Strategy_USDC_wETH",
+      "category": "vault-single-strategy",
+      "evm": "0xb9A69E0261f67Da41FccBEF8511b99E2D8255806"
+    },
+    {
+      "id": "0x0084260A5f7BF324b2325487D3EF080f298057b9",
+      "name": "Strategy_wETH_USDC",
+      "category": "vault-single-strategy",
+      "evm": "0x0084260A5f7BF324b2325487D3EF080f298057b9"
+    },
+    {
+      "id": "0.0.7775862",
+      "name": "StrategyDOVU",
+      "category": "lend-strategy",
+      "evm": "0xC8C0c05683474a7B4c8DdaD69D0D546A841Be5D4"
+    },
+    {
+      "id": "0.0.7775845",
+      "name": "StrategyHBARX",
+      "category": "lend-strategy",
+      "evm": "0xA68FC75Acc8a731a1e5cc4CB717b162566d947A8"
+    },
+    {
+      "id": "0.0.7775868",
+      "name": "StrategyHST",
+      "category": "lend-strategy",
+      "evm": "0x6886E0eD3Cb5dcE6f8e50dCb692a142AE8a14775"
+    },
+    {
+      "id": "0.0.7809076",
+      "name": "StrategyKARATE",
+      "category": "lend-strategy",
+      "evm": "0x9bB33f2D511CA3089Fc5696BEe3ABee7174a556a"
+    },
+    {
+      "id": "0.0.7775864",
+      "name": "StrategyPACK",
+      "category": "lend-strategy",
+      "evm": "0x4DF846F81135d9e63834AD4C7865F1C1983F767a"
+    },
+    {
+      "id": "0.0.7809074",
+      "name": "StrategySAUCE",
+      "category": "lend-strategy",
+      "evm": "0xf38e204b948Db78Ca5D51cCEd7ccEe182Fe4bcA8"
+    },
+    {
+      "id": "0.0.7775872",
+      "name": "StrategySTEAM",
+      "category": "lend-strategy",
+      "evm": "0xA3E524FE431011dc6d050c32E92Acc38D2f50cB4"
+    },
+    {
+      "id": "0.0.7809070",
+      "name": "StrategyUSDC",
+      "category": "lend-strategy",
+      "evm": "0x10753aD937e2f16daB73230fE5e5d8ace807C666"
+    },
+    {
+      "id": "0.0.7308488",
+      "name": "StrategyVolatileOne",
+      "category": "lend-strategy",
+      "evm": "0x0eaD7dDfC2Bb172D4a899aad8E7b4d882067a001"
+    },
+    {
+      "id": "0.0.7308491",
+      "name": "StrategyVolatileTwo",
+      "category": "lend-strategy",
+      "evm": "0xDa47ecEC5ba98eF6a8C3c4F7EaDa3FBda6f7EED9"
+    },
+    {
+      "id": "0.0.7775843",
+      "name": "StrategyWHBAR",
+      "category": "lend-strategy",
+      "evm": "0x82C50aAfe0dc3f92e637EE05076d68180DB06d58"
+    },
+    {
+      "id": "0.0.7775852",
+      "name": "StrategyXSAUCE",
+      "category": "lend-strategy",
+      "evm": "0x998A60b83617F05c1Dcd4b3f5D37a2265d6a674D"
+    },
+    {
+      "id": "0xc5b707348da504e9be1bd4e21525459830e7b11d",
+      "name": "USDC_HBAR_Pool",
+      "category": "vault-dual-pool",
+      "evm": "0xc5b707348da504e9be1bd4e21525459830e7b11d"
+    },
+    {
+      "id": "0x157EB9ba35d70560D44394206D4a03885C33c6d5",
+      "name": "USDC_HBAR_Strategy",
+      "category": "vault-dual-strategy",
+      "evm": "0x157EB9ba35d70560D44394206D4a03885C33c6d5"
+    },
+    {
+      "id": "0x724F19f52A3E0e9D2881587C997db93f9613B2C7",
+      "name": "USDC_HBAR_Vault",
+      "category": "vault-dual-vault",
+      "evm": "0x724F19f52A3E0e9D2881587C997db93f9613B2C7"
+    },
+    {
+      "id": "0x36acdfe1cbf9098bdb7a3c62b8eaa1016c111e31",
+      "name": "USDC_SAUCE_Pool",
+      "category": "vault-dual-pool",
+      "evm": "0x36acdfe1cbf9098bdb7a3c62b8eaa1016c111e31"
+    },
+    {
+      "id": "0xDC74aC010A60357A89008d5eBDBaF144Cf5BD8C6",
+      "name": "USDC_SAUCE_Strategy",
+      "category": "vault-dual-strategy",
+      "evm": "0xDC74aC010A60357A89008d5eBDBaF144Cf5BD8C6"
+    },
+    {
+      "id": "0x0171baa37fC9f56c98bD56FEB32bC28342944C6e",
+      "name": "USDC_SAUCE_Vault",
+      "category": "vault-dual-vault",
+      "evm": "0x0171baa37fC9f56c98bD56FEB32bC28342944C6e"
+    },
+    {
+      "id": "0x51aD1f2A691F0de1a28942C6d2870bBA05D1c8f7",
+      "name": "UV3MathLib",
+      "category": "vault-single-core",
+      "evm": "0x51aD1f2A691F0de1a28942C6d2870bBA05D1c8f7"
+    },
+    {
+      "id": "0x5D1e9BCAe2c171c0C8aF697Bdd02908f280716bc",
+      "name": "Vault_BONZO_HBAR",
+      "category": "vault-single-vault",
+      "evm": "0x5D1e9BCAe2c171c0C8aF697Bdd02908f280716bc"
+    },
+    {
+      "id": "0x072bC950618A4e286683886eBc01C73090BC1C8a",
+      "name": "Vault_DOVU_HBAR",
+      "category": "vault-single-vault",
+      "evm": "0x072bC950618A4e286683886eBc01C73090BC1C8a"
+    },
+    {
+      "id": "0xd406F0C0211836dbcA3EbF3b84487137be400E57",
+      "name": "Vault_HBAR_BONZO",
+      "category": "vault-single-vault",
+      "evm": "0xd406F0C0211836dbcA3EbF3b84487137be400E57"
+    },
+    {
+      "id": "0xEf55ABc71271dceaE4880b9000402a4b3F87D1eA",
+      "name": "Vault_HBAR_DOVU",
+      "category": "vault-single-vault",
+      "evm": "0xEf55ABc71271dceaE4880b9000402a4b3F87D1eA"
+    },
+    {
+      "id": "0x55958da8d5aC662aa8eD45111f170C3D8e4fCB3b",
+      "name": "Vault_HBAR_JAM",
+      "category": "vault-single-vault",
+      "evm": "0x55958da8d5aC662aa8eD45111f170C3D8e4fCB3b"
+    },
+    {
+      "id": "0xd1893FcFB1dbEbCCAa6813993074fEfb1569FA5F",
+      "name": "Vault_HBAR_PACK",
+      "category": "vault-single-vault",
+      "evm": "0xd1893FcFB1dbEbCCAa6813993074fEfb1569FA5F"
+    },
+    {
+      "id": "0xc883F70804380c1a49E23A6d1DCF8e784D093a3f",
+      "name": "Vault_HBAR_SAUCE",
+      "category": "vault-single-vault",
+      "evm": "0xc883F70804380c1a49E23A6d1DCF8e784D093a3f"
+    },
+    {
+      "id": "0xebaFaBBD6610304d7ae89351C5C37b8cf40c76eB",
+      "name": "Vault_HBAR_USDC",
+      "category": "vault-single-vault",
+      "evm": "0xebaFaBBD6610304d7ae89351C5C37b8cf40c76eB"
+    },
+    {
+      "id": "0x26C770f89d320Da2c2341cbf410F132f44eF70CD",
+      "name": "Vault_JAM_HBAR",
+      "category": "vault-single-vault",
+      "evm": "0x26C770f89d320Da2c2341cbf410F132f44eF70CD"
+    },
+    {
+      "id": "0xACd982eE8b869f11aa928c4760cC3C0D4f30a6d3",
+      "name": "Vault_PACK_HBAR",
+      "category": "vault-single-vault",
+      "evm": "0xACd982eE8b869f11aa928c4760cC3C0D4f30a6d3"
+    },
+    {
+      "id": "0x8e253F359Ba5DDD62644b1e5DAbD3D7748fb8193",
+      "name": "Vault_SAUCE_HBAR",
+      "category": "vault-single-vault",
+      "evm": "0x8e253F359Ba5DDD62644b1e5DAbD3D7748fb8193"
+    },
+    {
+      "id": "0x1b90B8f8ab3059cf40924338D5292FfbAEd79089",
+      "name": "Vault_USDC_HBAR",
+      "category": "vault-single-vault",
+      "evm": "0x1b90B8f8ab3059cf40924338D5292FfbAEd79089"
+    },
+    {
+      "id": "0x0Db93Cfe4BA0b2A7C10C83FBEe81Fd2EFB871864",
+      "name": "Vault_USDC_wETH",
+      "category": "vault-single-vault",
+      "evm": "0x0Db93Cfe4BA0b2A7C10C83FBEe81Fd2EFB871864"
+    },
+    {
+      "id": "0x31403d085C601F49b9644a4c9a493403FA14ABfe",
+      "name": "Vault_wETH_USDC",
+      "category": "vault-single-vault",
+      "evm": "0x31403d085C601F49b9644a4c9a493403FA14ABfe"
+    },
+    {
+      "id": "0xce878019645439E64B0e375fE73DDD3d532CC819",
+      "name": "VaultSlippageCheckV2",
+      "category": "vault-single-core",
+      "evm": "0xce878019645439E64B0e375fE73DDD3d532CC819"
+    },
+    {
+      "id": "0x1596BF18141b2Cd07BF6F7875975222C5B092064",
+      "name": "VolatilityCheck",
+      "category": "vault-single-core",
+      "evm": "0x1596BF18141b2Cd07BF6F7875975222C5B092064"
+    },
+    {
+      "id": "0.0.7308530",
+      "name": "WalletBalanceProvider",
+      "category": "lend-helper",
+      "evm": "0xD64ffB431cF66fDEDB6f98Af07c63F49295b69e5"
+    },
+    {
+      "id": "0.0.7308485",
+      "name": "WETHGateway",
+      "category": "lend-helper",
+      "evm": "0x9a601543e9264255BebB20Cef0E7924e97127105"
+    }
+  ],
+  "tokens": [
+    {
+      "id": "0.0.1456986",
+      "name": "WHBAR",
+      "symbol": "WHBAR",
+      "decimals": 8
+    },
+    {
+      "id": "0.0.834116",
+      "name": "HBARX",
+      "symbol": "HBARX",
+      "decimals": 8
+    },
+    {
+      "id": "0.0.456858",
+      "name": "USDC",
+      "symbol": "USDC",
+      "decimals": 6
+    },
+    {
+      "id": "0.0.731861",
+      "name": "SAUCE",
+      "symbol": "SAUCE",
+      "decimals": 6
+    },
+    {
+      "id": "0.0.1460200",
+      "name": "XSAUCE",
+      "symbol": "XSAUCE",
+      "decimals": 6
+    },
+    {
+      "id": "0.0.2283230",
+      "name": "KARATE",
+      "symbol": "KARATE",
+      "decimals": 8
+    },
+    {
+      "id": "0.0.3716059",
+      "name": "DOVU",
+      "symbol": "DOVU",
+      "decimals": 8
+    },
+    {
+      "id": "0.0.968069",
+      "name": "HST",
+      "symbol": "HST",
+      "decimals": 8
+    },
+    {
+      "id": "0.0.4794920",
+      "name": "PACK",
+      "symbol": "PACK",
+      "decimals": 6
+    },
+    {
+      "id": "0.0.3210123",
+      "name": "STEAM",
+      "symbol": "STEAM",
+      "decimals": 8
+    },
+    {
+      "id": "0.0.1159074",
+      "name": "GRELF",
+      "symbol": "GRELF",
+      "decimals": 8
+    },
+    {
+      "id": "0.0.5989978",
+      "name": "KBL",
+      "symbol": "KBL",
+      "decimals": 8
+    },
+    {
+      "id": "0.0.8279134",
+      "name": "BONZO",
+      "symbol": "BONZO",
+      "decimals": 8
+    }
+  ],
+  "topics": [
+    {
+      "id": "0.0.7159077",
+      "name": "Pre-Season Points"
+    }
+  ]
+}

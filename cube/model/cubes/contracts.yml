@@ -1,0 +1,48 @@
+cubes:
+  - name: contracts
+    sql_table: main.contracts
+    data_source: default
+
+    joins: []
+
+    dimensions:
+      - name: id
+        sql: id
+        type: number
+        primary_key: true
+
+      - name: contract_id
+        sql: contract_id
+        type: string
+
+      - name: name
+        sql: name
+        type: string
+
+      - name: canonical_name
+        sql: canonical_name
+        type: string
+
+      - name: category
+        sql: category
+        type: string
+
+      - name: evm_address
+        sql: evm_address
+        type: string
+
+      - name: asset
+        sql: asset
+        type: string
+
+      - name: source_file
+        sql: source_file
+        type: string
+
+      - name: created_at
+        sql: created_at
+        type: time
+
+    measures:
+      - name: count
+        type: count

@@ -1,0 +1,32 @@
+cubes:
+  - name: activity_log
+    sql_table: main.activity_log
+    data_source: default
+
+    joins: []
+
+    dimensions:
+      - name: id
+        sql: id
+        type: number
+        primary_key: true
+
+      - name: event_type
+        sql: event_type
+        type: string
+
+      - name: entity_name
+        sql: entity_name
+        type: string
+
+      - name: message
+        sql: message
+        type: string
+
+      - name: timestamp
+        sql: timestamp
+        type: time
+
+    measures:
+      - name: count
+        type: count

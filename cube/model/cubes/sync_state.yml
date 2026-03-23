@@ -1,0 +1,52 @@
+cubes:
+  - name: sync_state
+    sql_table: main.sync_state
+    data_source: default
+
+    joins: []
+
+    dimensions:
+      - name: id
+        sql: id
+        type: number
+        primary_key: true
+
+      - name: entity_id
+        sql: entity_id
+        type: string
+
+      - name: entity_type
+        sql: entity_type
+        type: string
+
+      - name: last_timestamp
+        sql: >-
+          CASE
+            WHEN last_timestamp IS NULL OR last_timestamp = '' OR last_timestamp = '0.0' OR instr(last_timestamp, '.') = 0 THEN NULL
+            ELSE datetime(CAST(substr(last_timestamp, 1, instr(last_timestamp, '.') - 1) AS INTEGER), 'unixepoch')
+          END
+        type: time
+
+      - name: last_index
+        sql: last_index
+        type: number
+
+      - name: last_tx_id
+        sql: last_tx_id
+        type: string
+
+      - name: items_synced
+        sql: items_synced
+        type: number
+
+      - name: updated_at
+        sql: updated_at
+        type: time
+
+    measures:
+      - name: count
+        type: count
+
+      - name: max_items_synced
+        sql: items_synced
+        type: max

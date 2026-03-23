@@ -1,0 +1,56 @@
+cubes:
+  - name: topic_messages
+    sql_table: main.topic_messages
+    data_source: default
+
+    joins: []
+
+    dimensions:
+      - name: id
+        sql: id
+        type: number
+        primary_key: true
+
+      - name: topic_id
+        sql: topic_id
+        type: string
+
+      - name: sequence_number
+        sql: sequence_number
+        type: number
+
+      - name: message
+        sql: message_utf8
+        type: string
+
+      - name: message_base64
+        sql: message_base64
+        type: string
+
+      - name: payer_account_id
+        sql: payer_account_id
+        type: string
+
+      - name: tx_id
+        sql: tx_id
+        type: string
+
+      - name: consensus_timestamp
+        sql: >-
+          CASE
+            WHEN consensus_timestamp IS NULL OR consensus_timestamp = '' OR consensus_timestamp = '0.0' OR instr(consensus_timestamp, '.') = 0 THEN NULL
+            ELSE datetime(CAST(substr(consensus_timestamp, 1, instr(consensus_timestamp, '.') - 1) AS INTEGER), 'unixepoch')
+          END
+        type: time
+
+      - name: indexed_at
+        sql: indexed_at
+        type: time
+
+    measures:
+      - name: count
+        type: count
+
+      - name: max_sequence_number
+        sql: sequence_number
+        type: max

@@ -1,0 +1,23 @@
+{
+  "name": "sefi-backend",
+  "version": "1.0.0",
+  "description": "SeFi protocol-agnostic Hedera indexer backend",
+  "type": "module",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "@hashgraph/sdk": "^2.81.0",
+    "better-sqlite3": "^12.8.0",
+    "express": "^4.21.0",
+    "hedera-agent-kit": "^3.8.1",
+    "yaml": "^2.8.1"
+  },
+  "license": "MIT"
+}
