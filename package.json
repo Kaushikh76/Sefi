@@ -1,0 +1,26 @@
+{
+  "name": "sefi-stack",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Host-native SeFi backend + Docker Cube stack",
+  "scripts": {
+    "frontend:dev": "npm --prefix ./frontend run dev",
+    "frontend:start": "npm --prefix ./frontend start",
+    "backend:dev": "npm --prefix ./backend run dev",
+    "backend:start": "npm --prefix ./backend start",
+    "start": "bash ./scripts/start-host-stack.sh",
+    "start:detached": "bash ./scripts/start-host-stack.sh --detach",
+    "start:build": "bash ./scripts/start-host-stack.sh --build",
+    "start:build:detached": "bash ./scripts/start-host-stack.sh --build --detach",
+    "start:containerized": "docker compose --profile containerized up",
+    "start:containerized:detached": "docker compose --profile containerized up -d",
+    "start:containerized:build": "docker compose --profile containerized up --build",
+    "start:containerized:build:detached": "docker compose --profile containerized up --build -d",
+    "stop": "bash ./scripts/stop-host-stack.sh",
+    "logs": "bash ./scripts/logs-host-stack.sh",
+    "docker:df": "docker system df",
+    "docker:prune:build-cache": "docker builder prune -af",
+    "test:stack": "bash ./scripts/test-stack.sh",
+    "manifest:import:bonzo": "node ./scripts/import-bonzo-manifest.mjs"
+  }
+}

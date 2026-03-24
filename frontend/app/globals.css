@@ -1,0 +1,157 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 0 0% 5%;
+  --foreground: 0 0% 90%;
+  --card: 0 0% 11%;
+  --card-foreground: 0 0% 90%;
+  --primary: 145 50% 82%;
+  --primary-dim: 145 40% 72%;
+  --primary-foreground: 145 60% 10%;
+  --secondary: 0 0% 8%;
+  --secondary-foreground: 0 0% 90%;
+  --muted: 0 0% 14%;
+  --muted-foreground: 0 0% 46%;
+  --accent: 0 0% 16%;
+  --accent-foreground: 0 0% 90%;
+  --border: 0 0% 20%;
+  --input: 0 0% 14%;
+  --ring: 145 50% 82%;
+  --success: 145 50% 82%;
+  --danger: 2 100% 71%;
+  --radius: 0.75rem;
+  --surface: 0 0% 5%;
+  --surface-low: 0 0% 11%;
+  --surface-container: 0 0% 13%;
+  --surface-high: 0 0% 17%;
+  --surface-highest: 0 0% 21%;
+  --outline-soft: 0 0% 20%;
+  --sidebar-width: 256px;
+}
+
+* {
+  border-color: hsl(var(--border) / 0.15);
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  @apply bg-background text-foreground antialiased;
+  font-family: var(--font-body), "Inter", "Segoe UI", sans-serif;
+  background-color: #0e0e0f;
+}
+
+::selection {
+  background: rgba(185, 242, 209, 0.35);
+  color: #f8fafc;
+}
+
+@keyframes orbFloat {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-12px) scale(1.04); }
+}
+
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes pulseGlow {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 0.8; }
+}
+
+@layer base {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-display), "Manrope", sans-serif;
+  }
+}
+
+@layer utilities {
+  .font-display {
+    font-family: var(--font-display), "Manrope", sans-serif;
+  }
+
+  .font-body {
+    font-family: var(--font-body), "Inter", "Segoe UI", sans-serif;
+  }
+
+  .font-mono,
+  code,
+  pre {
+    font-family: "IBM Plex Mono", "JetBrains Mono", "SFMono-Regular", Menlo, monospace;
+  }
+
+  .surface-shell {
+    background: #0e0e0f;
+  }
+
+  .surface-glass {
+    background: rgba(53, 52, 54, 0.1);
+    backdrop-filter: blur(16px);
+  }
+
+  .ghost-top-edge {
+    position: relative;
+  }
+
+  .ghost-top-edge::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    border-radius: inherit;
+    padding-top: 1px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.01) 12%, transparent 30%);
+    -webkit-mask:
+      linear-gradient(#fff 0 0) content-box,
+      linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+  }
+
+  .ambient-float {
+    box-shadow:
+      0 24px 64px rgba(0,0,0,0.3),
+      inset 0 1px 0 rgba(255,255,255,0.03);
+  }
+
+  .page-enter {
+    animation: floatIn 480ms ease-out both;
+  }
+
+  .led-success {
+    box-shadow: 0 0 14px rgba(185,242,209,0.4);
+  }
+
+  .led-danger {
+    box-shadow: 0 0 14px rgba(255,113,108,0.35);
+  }
+
+  .led-warning {
+    box-shadow: 0 0 14px rgba(255,212,143,0.35);
+  }
+
+  .led-stale {
+    box-shadow: 0 0 14px rgba(163,170,196,0.2);
+  }
+
+  .mint-glow {
+    box-shadow: 0 0 15px rgba(185,242,209,0.3);
+  }
+}
